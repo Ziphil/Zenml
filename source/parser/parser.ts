@@ -1,0 +1,246 @@
+//
+
+import Parsimmon from "parsimmon";
+import {
+  Parser,
+  alt,
+  lazy,
+  seq
+} from "parsimmon";
+import {
+  DOMImplementation
+} from "xmldom";
+import {
+  mapCatch
+} from "./util";
+
+
+const ELEMENT_START = "\\";
+const MACRO_START = "&";
+const ESCAPE_START = "`";
+const ATTRIBUTE_START = "|";
+const ATTRIBUTE_END = "|";
+const ATTRIBUTE_EQUAL = "=";
+const ATTRIBUTE_SEPARATOR = ",";
+const STRING_START = "\"";
+const STRING_END = "\"";
+const CONTENT_START = "<";
+const CONTENT_END = ">";
+const CONTENT_DELIMITER = ";";
+const SPECIAL_ELEMENT_STARTS = {brace: "{", bracket: "[", slash: "/"} as const;
+const SPECIAL_ELEMENT_ENDS = {brace: "}", bracket: "]", slash: "/"} as const;
+const COMMENT_DELIMITER = "#";
+const SYSTEM_INSTRUCTION_NAME = "zml";
+const MARK_CHARS = {instruction: "?", trim: "*", verbal: "~", multiple: "+"} as const;
+const ESCAPE_CHARS = ["&", "<", ">", "'", "\"", "{", "}", "[", "]", "/", "\\", "|", "`", "#", ";"];
+const SPACE_CHARS = ["\u{20}", "\u{9}", "\u{D}", "\u{A}"];
+const FIRST_IDENTIFIER_CHAR_RANGES = [
+  [0x3A, 0x3A], [0x5F, 0x5F],
+  [0x41, 0x5A], [0x61, 0x7A], [0xC0, 0xD6], [0xD8, 0xF6], [0xF8, 0x2FF],
+  [0x370, 0x37D], [0x37F, 0x1FFF],
+  [0x200C, 0x200D], [0x2070, 0x218F], [0x2C00, 0x2FEF],
+  [0x3001, 0xD7FF], [0xF900, 0xFDCF], [0xFDF0, 0xFFFD]
+];
+const REST_IDENTIFIER_CHAR_RANGES = [
+  [0x2D, 0x2E], [0x3A, 0x3A], [0x5F, 0x5F], [0xB7, 0xB7],
+  [0x30, 0x39],
+  [0x41, 0x5A], [0x61, 0x7A], [0xC0, 0xD6], [0xD8, 0xF6], [0xF8, 0x2FF],
+  [0x300, 0x36F],
+  [0x370, 0x37D], [0x37F, 0x1FFF],
+  [0x200C, 0x200D], [0x2070, 0x218F], [0x2C00, 0x2FEF],
+  [0x203F, 0x2040],
+  [0x3001, 0xD7FF], [0xF900, 0xFDCF], [0xFDF0, 0xFFFD], [0x10000, 0xEFFFF]
+];
+
+const SPACE_CHAR_STRING = SPACE_CHARS.join("");
+
+type ZenmlMark = keyof typeof MARK_CHARS;
+type ZenmlAttribute = readonly [name: string, value: string];
+type ZenmlAttributes = ReadonlyArray<ZenmlAttribute>;
+type ZenmlTagSpec = readonly [name: string, marks: Array<ZenmlMark>, attributes: ZenmlAttributes, macro: boolean];
+
+type Nodes = Array<Node>;
+
+
+export class BaseZenmlParser {
+
+  private readonly document: Document;
+
+  public constructor() {
+    let implementation = new DOMImplementation();
+    this.document = implementation.createDocument(null, null, null);
+  }
+
+  public tryParse(input: string): Document {
+    return this.root.tryParse(input);
+  }
+
+  protected root: Parser<Document> = lazy(() => {
+    throw new Error("to be implemented");
+  });
+
+  protected nodes: Parser<Nodes> = lazy(() => {
+    throw new Error("to be implemented");
+  });
+
+  protected element: Parser<Nodes> = lazy(() => {
+    let parser = seq(
+      this.tag,
+      this.childrenList
+    ).thru(mapCatch(([tagSpec, childrenList]) => {
+      let [name, marks, attributes, macro] = tagSpec;
+      let element = (macro) ? this.processMacro(name, marks, attributes, childrenList) : this.createElement(name, marks, attributes, childrenList);
+      return element;
+    }));
+    return parser;
+  });
+
+  protected childrenList: Parser<Array<Nodes>> = lazy(() => {
+    let parser = alt(this.emptyChildrenChain, this.childrenChain);
+    return parser;
+  });
+
+  protected childrenChain: Parser<Array<Nodes>> = lazy(() => {
+    let parser = this.children.atLeast(1);
+    return parser;
+  });
+
+  protected emptyChildrenChain: Parser<Array<Nodes>> = lazy(() => {
+    let parser = Parsimmon.string(CONTENT_DELIMITER).result([]);
+    return parser;
+  });
+
+  protected children: Parser<Array<Node>> = lazy(() => {
+    let parser = seq(
+      Parsimmon.string(CONTENT_START),
+      this.nodes,
+      Parsimmon.string(CONTENT_END)
+    ).map(([, children]) => children);
+    return parser;
+  });
+
+  protected tag: Parser<ZenmlTagSpec> = lazy(() => {
+    let parser = seq(
+      Parsimmon.oneOf(ELEMENT_START + MACRO_START),
+      this.identifier,
+      this.marks,
+      this.attributes.times(0, 1).map((result) => result[0])
+    ).map(([startChar, name, marks, attributes]) => {
+      let macro = startChar === MACRO_START;
+      return [name, marks, attributes, macro] as const;
+    });
+    return parser;
+  });
+
+  protected marks: Parser<Array<ZenmlMark>> = lazy(() => {
+    let parser = this.mark.many();
+    return parser;
+  });
+
+  protected mark: Parser<ZenmlMark> = lazy(() => {
+    let parsers = Object.entries(MARK_CHARS).map(([mark, char]) => Parsimmon.string(char).result(mark)) as Array<Parser<ZenmlMark>>;
+    let parser = alt(...parsers);
+    return parser;
+  });
+
+  protected attributes: Parser<ZenmlAttributes> = lazy(() => {
+    let parser = seq(
+      Parsimmon.string(ATTRIBUTE_START),
+      this.attribute.sepBy(seq(this.blank, Parsimmon.string(ATTRIBUTE_SEPARATOR), this.blank))
+    ).map(([, attributes]) => attributes);
+    return parser;
+  });
+
+  protected attribute: Parser<ZenmlAttribute> = lazy(() => {
+    let parser = seq(
+      this.identifier,
+      this.blank,
+      this.attributeValue.times(0, 1).map((result) => result[0])
+    ).map(([name, , value]) => [name, value ?? name] as const);
+    return parser;
+  });
+
+  protected attributeValue: Parser<string> = lazy(() => {
+    let parser = seq(
+      Parsimmon.string(ATTRIBUTE_EQUAL),
+      this.blank,
+      this.string
+    ).map(([, , value]) => value);
+    return parser;
+  });
+
+  protected string: Parser<string> = lazy(() => {
+    let parser = seq(
+      Parsimmon.string(STRING_START),
+      this.innerString,
+      Parsimmon.string(STRING_END)
+    ).map(([, string]) => string);
+    return parser;
+  });
+
+  protected innerString: Parser<string> = lazy(() => {
+    let parser = alt(this.stringEscape, this.plainInnerString);
+    return parser;
+  });
+
+  protected plainInnerString: Parser<string> = lazy(() => {
+    let parser = Parsimmon.noneOf(STRING_START + STRING_END).atLeast(1).map((chars) => chars.join(""));
+    return parser;
+  });
+
+  protected identifier: Parser<string> = lazy(() => {
+    let parser = seq(
+      this.firstIdentifierChar,
+      this.restIdentifierChar.many()
+    ).map(([firstChar, restChars]) => firstChar + restChars.join(""));
+    return parser;
+  });
+
+  protected firstIdentifierChar: Parser<string> = lazy(() => {
+    let parser = Parsimmon.test((char) => {
+      let code = char.charCodeAt(0);
+      let predicate = FIRST_IDENTIFIER_CHAR_RANGES.some(([start, end]) => code >= start && code <= end);
+      return predicate;
+    });
+    return parser;
+  });
+
+  protected restIdentifierChar: Parser<string> = lazy(() => {
+    let parser = Parsimmon.test((char) => {
+      let code = char.charCodeAt(0);
+      let predicate = REST_IDENTIFIER_CHAR_RANGES.some(([start, end]) => code >= start && code <= end);
+      return predicate;
+    });
+    return parser;
+  });
+
+  protected stringEscape: Parser<string> = lazy(() => {
+    let parser = seq(
+      Parsimmon.string(ESCAPE_START),
+      Parsimmon.any
+    ).thru(mapCatch(([, char]) => this.createStringEscape(char)));
+    return parser;
+  });
+
+  protected blank: Parser<null> = lazy(() => {
+    let parser = Parsimmon.oneOf(SPACE_CHAR_STRING).result(null);
+    return parser;
+  });
+
+  protected createElement(name: string, marks: Array<ZenmlMark>, attributes: ZenmlAttributes, childrenList: Array<Nodes>): Nodes {
+    throw "to be implemented";
+  }
+
+  protected processMacro(name: string, marks: Array<ZenmlMark>, attributes: ZenmlAttributes, childrenList: Array<Nodes>): Nodes {
+    throw "to be implemented";
+  }
+
+  protected createStringEscape(char: string): string {
+    if (ESCAPE_CHARS.includes(char)) {
+      return char;
+    } else {
+      throw "invalid escape";
+    }
+  }
+
+}
