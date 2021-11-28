@@ -1,0 +1,22 @@
+name: test
+
+on:
+  - push
+  - pull_request
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+      - name: Setup Node 14.x
+        uses: actions/setup-node@v1
+        with:
+          node-version: 14.x
+      - name: Install packages
+        run: npm ci
+      - name: Run test
+        run: npm run test:coverage
+      - name: Upload coverage
+        uses: codecov/codecov-action@v2
