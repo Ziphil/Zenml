@@ -25,6 +25,10 @@
     "testMatch": [
       "<rootDir>/test/**/*.(ts|js)"
     ],
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "util\\.ts"
+    ],
     "transform": {
       "^.+\\.(ts|tsx)$": "ts-jest"
     },
