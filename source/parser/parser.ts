@@ -10,9 +10,7 @@ import {
 import {
   DOMImplementation
 } from "xmldom";
-import {
-  mapCatch, maybe
-} from "./util";
+import "./extension";
 
 
 const ELEMENT_START = "\\";
@@ -96,11 +94,11 @@ export class BaseZenmlParser {
     let parser = seq(
       this.tag,
       this.childrenList
-    ).thru(mapCatch(([tagSpec, childrenList]) => {
+    ).mapCatch(([tagSpec, childrenList]) => {
       let [name, marks, attributes, macro] = tagSpec;
       let element = (macro) ? this.processMacro(name, marks, attributes, childrenList) : this.createElement(name, marks, attributes, childrenList);
       return element;
-    }));
+    });
     return parser;
   });
 
@@ -133,7 +131,7 @@ export class BaseZenmlParser {
       Parsimmon.oneOf(ELEMENT_START + MACRO_START),
       this.identifier,
       this.marks,
-      this.attributes.thru(maybe)
+      this.attributes.maybe()
     ).map(([startChar, name, marks, attributes]) => {
       let macro = startChar === MACRO_START;
       return [name, marks, attributes ?? [], macro] as const;
@@ -165,7 +163,7 @@ export class BaseZenmlParser {
     let parser = seq(
       this.identifier,
       this.blank,
-      this.attributeValue.thru(maybe)
+      this.attributeValue.maybe()
     ).map(([name, , value]) => [name, value ?? name] as const);
     return parser;
   });
@@ -225,7 +223,7 @@ export class BaseZenmlParser {
   });
 
   protected text: Parser<Nodes> = lazy(() => {
-    let parser = this.textFragment.atLeast(1).thru(mapCatch((strings) => this.createText(strings.join(""))));
+    let parser = this.textFragment.atLeast(1).mapCatch((strings) => this.createText(strings.join("")));
     return parser;
   });
 
@@ -250,7 +248,7 @@ export class BaseZenmlParser {
     let parser = seq(
       Parsimmon.string(ESCAPE_START),
       Parsimmon.any
-    ).thru(mapCatch(([, char]) => this.createStringEscape(char)));
+    ).mapCatch(([, char]) => this.createStringEscape(char));
     return parser;
   });
 
@@ -258,7 +256,7 @@ export class BaseZenmlParser {
     let parser = seq(
       Parsimmon.string(ESCAPE_START),
       Parsimmon.any
-    ).thru(mapCatch(([, char]) => this.createTextEscape(char)));
+    ).mapCatch(([, char]) => this.createTextEscape(char));
     return parser;
   });
 
