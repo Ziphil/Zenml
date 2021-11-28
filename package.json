@@ -17,6 +17,7 @@
   "eslintConfig": {
     "extends": "ziphil",
     "rules": {
+      "@typescript-eslint/quotes": "off",
       "no-throw-literal": "off"
     }
   },

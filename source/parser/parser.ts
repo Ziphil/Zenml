@@ -76,11 +76,20 @@ export class BaseZenmlParser {
   }
 
   protected root: Parser<Document> = lazy(() => {
-    throw new Error("to be implemented");
+    let parser = this.nodes.map((nodes) => {
+      let document = this.document;
+      for (let node of nodes) {
+        document.appendChild(node);
+      }
+      return document;
+    });
+    return parser;
   });
 
   protected nodes: Parser<Nodes> = lazy(() => {
-    throw new Error("to be implemented");
+    let innerParsers = [this.element, this.text];
+    let parser = alt(...innerParsers).many().map((nodesList) => nodesList.flat());
+    return parser;
   });
 
   protected element: Parser<Nodes> = lazy(() => {
@@ -127,7 +136,7 @@ export class BaseZenmlParser {
       this.attributes.times(0, 1).map((result) => result[0])
     ).map(([startChar, name, marks, attributes]) => {
       let macro = startChar === MACRO_START;
-      return [name, marks, attributes, macro] as const;
+      return [name, marks, attributes ?? [], macro] as const;
     });
     return parser;
   });
@@ -146,7 +155,8 @@ export class BaseZenmlParser {
   protected attributes: Parser<ZenmlAttributes> = lazy(() => {
     let parser = seq(
       Parsimmon.string(ATTRIBUTE_START),
-      this.attribute.sepBy(seq(this.blank, Parsimmon.string(ATTRIBUTE_SEPARATOR), this.blank))
+      this.attribute.sepBy(seq(this.blank, Parsimmon.string(ATTRIBUTE_SEPARATOR), this.blank)),
+      Parsimmon.string(ATTRIBUTE_END)
     ).map(([, attributes]) => attributes);
     return parser;
   });
@@ -172,18 +182,18 @@ export class BaseZenmlParser {
   protected string: Parser<string> = lazy(() => {
     let parser = seq(
       Parsimmon.string(STRING_START),
-      this.innerString,
+      this.stringFragment.many(),
       Parsimmon.string(STRING_END)
-    ).map(([, string]) => string);
+    ).map(([, strings]) => strings.join());
     return parser;
   });
 
-  protected innerString: Parser<string> = lazy(() => {
-    let parser = alt(this.stringEscape, this.plainInnerString);
+  protected stringFragment: Parser<string> = lazy(() => {
+    let parser = alt(this.stringEscape, this.plainStringFragment);
     return parser;
   });
 
-  protected plainInnerString: Parser<string> = lazy(() => {
+  protected plainStringFragment: Parser<string> = lazy(() => {
     let parser = Parsimmon.noneOf(STRING_START + STRING_END).atLeast(1).map((chars) => chars.join(""));
     return parser;
   });
@@ -214,6 +224,28 @@ export class BaseZenmlParser {
     return parser;
   });
 
+  protected text: Parser<Nodes> = lazy(() => {
+    let parser = this.textFragment.atLeast(1).thru(mapCatch((strings) => this.createText(strings.join(""))));
+    return parser;
+  });
+
+  protected textFragment: Parser<string> = lazy(() => {
+    let parser = alt(this.textEscape, this.plainTextFragment);
+    return parser;
+  });
+
+  protected plainTextFragment: Parser<string> = lazy(() => {
+    let exclusion = ELEMENT_START + MACRO_START + ESCAPE_START + CONTENT_START + CONTENT_END + CONTENT_DELIMITER + COMMENT_DELIMITER;
+    for (let [, char] of Object.entries(SPECIAL_ELEMENT_STARTS)) {
+      exclusion += char;
+    }
+    for (let [, char] of Object.entries(SPECIAL_ELEMENT_ENDS)) {
+      exclusion += char;
+    }
+    let parser = Parsimmon.noneOf(exclusion).atLeast(1).map((chars) => chars.join(""));
+    return parser;
+  });
+
   protected stringEscape: Parser<string> = lazy(() => {
     let parser = seq(
       Parsimmon.string(ESCAPE_START),
@@ -222,13 +254,45 @@ export class BaseZenmlParser {
     return parser;
   });
 
+  protected textEscape: Parser<string> = lazy(() => {
+    let parser = seq(
+      Parsimmon.string(ESCAPE_START),
+      Parsimmon.any
+    ).thru(mapCatch(([, char]) => this.createTextEscape(char)));
+    return parser;
+  });
+
   protected blank: Parser<null> = lazy(() => {
-    let parser = Parsimmon.oneOf(SPACE_CHAR_STRING).result(null);
+    let parser = Parsimmon.oneOf(SPACE_CHAR_STRING).many().result(null);
     return parser;
   });
 
   protected createElement(name: string, marks: Array<ZenmlMark>, attributes: ZenmlAttributes, childrenList: Array<Nodes>): Nodes {
-    throw "to be implemented";
+    if (childrenList.length <= 1 || marks.includes("multiple")) {
+      return this.createNormalElement(name, attributes, childrenList);
+    } else {
+      throw "normal element cannot have more than one argument";
+    }
+  }
+
+  protected createNormalElement(name: string, attributes: ZenmlAttributes, childrenList: Array<Nodes>): Nodes {
+    let nodes = [];
+    for (let children of childrenList) {
+      let element = this.document.createElement(name);
+      for (let attribute of attributes) {
+        element.setAttribute(attribute[0], attribute[1]);
+      }
+      for (let child of children) {
+        element.appendChild(child);
+      }
+      nodes.push(element);
+    }
+    return nodes;
+  }
+
+  protected createText(string: string): Nodes {
+    let text = this.document.createTextNode(string);
+    return [text];
   }
 
   protected processMacro(name: string, marks: Array<ZenmlMark>, attributes: ZenmlAttributes, childrenList: Array<Nodes>): Nodes {
@@ -236,6 +300,14 @@ export class BaseZenmlParser {
   }
 
   protected createStringEscape(char: string): string {
+    if (ESCAPE_CHARS.includes(char)) {
+      return char;
+    } else {
+      throw "invalid escape";
+    }
+  }
+
+  protected createTextEscape(char: string): string {
     if (ESCAPE_CHARS.includes(char)) {
       return char;
     } else {
