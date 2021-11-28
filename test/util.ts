@@ -29,3 +29,5 @@ export function dedent(templateStrings: TemplateStringsArray, ...values: Array<u
   });
   return string;
 }
+
+export let $ = dedent;

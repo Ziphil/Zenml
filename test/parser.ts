@@ -7,7 +7,7 @@ import {
   BaseZenmlParser
 } from "../source";
 import {
-  dedent
+  $
 } from "./util";
 
 
@@ -20,29 +20,29 @@ function compare(input: string, output: string): void {
 
 describe("elements and texts", () => {
   test("basic", () => {
-    compare(dedent`texttext`, dedent`texttext`);
-    compare(dedent`\element<text>`, dedent`<element>text</element>`);
+    compare($`texttext`, $`texttext`);
+    compare($`\element<text>`, $`<element>text</element>`);
   });
   test("with attributes", () => {
-    compare(dedent`\element|attr="val"|<text>`, dedent`<element attr="val">text</element>`);
-    compare(dedent`\element|attr="val",foo="bar",neko="mofu"|<text>`, dedent`<element attr="val" foo="bar" neko="mofu">text</element>`);
+    compare($`\element|attr="val"|<text>`, $`<element attr="val">text</element>`);
+    compare($`\element|attr="val",foo="bar",neko="mofu"|<text>`, $`<element attr="val" foo="bar" neko="mofu">text</element>`);
   });
   test("no attributes", () => {
-    compare(dedent`\element||<no attr>`, dedent`<element>no attr</element>`);
+    compare($`\element||<no attr>`, $`<element>no attr</element>`);
   });
   test("boolean attributes", () => {
-    compare(dedent`\element|bool|<text>`, dedent`<element bool="bool">text</element>`);
-    compare(dedent`\element|bool,another|<text>`, dedent`<element bool="bool" another="another">text</element>`);
+    compare($`\element|bool|<text>`, $`<element bool="bool">text</element>`);
+    compare($`\element|bool,another|<text>`, $`<element bool="bool" another="another">text</element>`);
   });
   test("complex", () => {
-    compare(dedent`\nest<text\nest<inner>text>`, dedent`<nest>text<nest>inner</nest>text</nest>`);
-    compare(dedent`
+    compare($`\nest<text\nest<inner>text>`, $`<nest>text<nest>inner</nest>text</nest>`);
+    compare($`
       \foo<\bar<\baz<neko>>>outer\foo<\bar<neko>>
       \foo<
         neko\bar<mofu>
         neko
       >
-    `, dedent`
+    `, $`
       <foo><bar><baz>neko</baz></bar></foo>outer<foo><bar>neko</bar></foo>
       <foo>
         neko<bar>mofu</bar>
@@ -54,17 +54,17 @@ describe("elements and texts", () => {
 
 describe("block comments", () => {
   test("basic", () => {
-    compare(dedent`#<comment>`, dedent`<!--comment-->`);
-    compare(dedent`#<comment>outer#<another>`, dedent`<!--comment-->outer<!--another-->`);
-    compare(dedent`\foo<#<comment>outer>`, dedent`<foo><!--comment-->outer</foo>`);
+    compare($`#<comment>`, $`<!--comment-->`);
+    compare($`#<comment>outer#<another>`, $`<!--comment-->outer<!--another-->`);
+    compare($`\foo<#<comment>outer>`, $`<foo><!--comment-->outer</foo>`);
   });
   test("multiline", () => {
-    compare(dedent`
+    compare($`
       #<
         multiline block comment
         second line
       >
-    `, dedent`
+    `, $`
       <!--
         multiline block comment
         second line
@@ -75,30 +75,37 @@ describe("block comments", () => {
 
 describe("line comments", () => {
   test("basic", () => {
-    compare(dedent`
+    compare($`
       text
       ##line comment
       text
-    `, dedent`
+    `, $`
       text
       <!--line comment-->text
     `);
-    compare(dedent`
+    compare($`
       \foo<
         ##\foo<>
       >
-    `, dedent`
+    `, $`
       <foo>
         <!--\foo<>--></foo>
     `);
   });
   test("ending at eof", () => {
-    compare(dedent`
+    compare($`
       text
       ##line comment ends at eof
-    `, dedent`
+    `, $`
       text
       <!--line comment ends at eof-->
     `);
+  });
+});
+
+describe("escapes", () => {
+  test("in strings", () => {
+  });
+  test("in texts", () => {
   });
 });
