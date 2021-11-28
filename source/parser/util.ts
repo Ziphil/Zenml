@@ -11,6 +11,10 @@ export function attempt<T>(parser: Parser<T>): Parser<T> {
   return lookahead(parser).then(parser);
 }
 
+export function maybe<T>(parser: Parser<T>): Parser<T | null> {
+  return parser.times(0, 1).map((result) => result[0] ?? null);
+}
+
 export function mapCatch<T, U>(callback: (result: T) => U): (parser: Parser<T>) => Parser<U> {
   let transformer = function (parser: Parser<T>): Parser<U> {
     let nextParser = parser.chain((result) => {

@@ -11,7 +11,7 @@ import {
   DOMImplementation
 } from "xmldom";
 import {
-  mapCatch
+  mapCatch, maybe
 } from "./util";
 
 
@@ -133,7 +133,7 @@ export class BaseZenmlParser {
       Parsimmon.oneOf(ELEMENT_START + MACRO_START),
       this.identifier,
       this.marks,
-      this.attributes.times(0, 1).map((result) => result[0])
+      this.attributes.thru(maybe)
     ).map(([startChar, name, marks, attributes]) => {
       let macro = startChar === MACRO_START;
       return [name, marks, attributes ?? [], macro] as const;
@@ -165,7 +165,7 @@ export class BaseZenmlParser {
     let parser = seq(
       this.identifier,
       this.blank,
-      this.attributeValue.times(0, 1).map((result) => result[0])
+      this.attributeValue.thru(maybe)
     ).map(([name, , value]) => [name, value ?? name] as const);
     return parser;
   });
