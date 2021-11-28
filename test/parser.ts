@@ -108,4 +108,8 @@ describe("escapes", () => {
   });
   test("in texts", () => {
   });
+  test("invalid in strings", () => {
+  });
+  test("invalid in texts", () => {
+  });
 });
