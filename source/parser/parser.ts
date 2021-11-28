@@ -85,7 +85,7 @@ export class BaseZenmlParser {
   });
 
   protected nodes: Parser<Nodes> = lazy(() => {
-    let innerParsers = [this.element, this.text];
+    let innerParsers = [this.element, this.comment, this.text];
     let parser = alt(...innerParsers).many().map((nodesList) => nodesList.flat());
     return parser;
   });
@@ -223,16 +223,16 @@ export class BaseZenmlParser {
   });
 
   protected text: Parser<Nodes> = lazy(() => {
-    let parser = this.textFragment.atLeast(1).mapCatch((strings) => this.createText(strings.join("")));
+    let parser = this.textContentFragment.atLeast(1).mapCatch((contents) => this.createText(contents.join("")));
     return parser;
   });
 
-  protected textFragment: Parser<string> = lazy(() => {
-    let parser = alt(this.textEscape, this.plainTextFragment);
+  protected textContentFragment: Parser<string> = lazy(() => {
+    let parser = alt(this.textEscape, this.plainTextContentFragment);
     return parser;
   });
 
-  protected plainTextFragment: Parser<string> = lazy(() => {
+  protected plainTextContentFragment: Parser<string> = lazy(() => {
     let exclusion = ELEMENT_START + MACRO_START + ESCAPE_START + CONTENT_START + CONTENT_END + CONTENT_DELIMITER + COMMENT_DELIMITER;
     for (let [, char] of Object.entries(SPECIAL_ELEMENT_STARTS)) {
       exclusion += char;
@@ -257,6 +257,42 @@ export class BaseZenmlParser {
       Parsimmon.string(ESCAPE_START),
       Parsimmon.any
     ).mapCatch(([, char]) => this.createTextEscape(char));
+    return parser;
+  });
+
+  protected comment: Parser<Nodes> = lazy(() => {
+    let parser = seq(
+      Parsimmon.string(COMMENT_DELIMITER),
+      alt(this.lineComment, this.blockComment)
+    ).map(([, comment]) => comment);
+    return parser;
+  });
+
+  protected lineComment: Parser<Nodes> = lazy(() => {
+    let parser = seq(
+      Parsimmon.string(COMMENT_DELIMITER),
+      this.lineCommentContent,
+      alt(Parsimmon.string("\n"), Parsimmon.eof)
+    ).map(([, content]) => this.createLineComment(content));
+    return parser;
+  });
+
+  protected blockComment: Parser<Nodes> = lazy(() => {
+    let parser = seq(
+      Parsimmon.string(CONTENT_START),
+      this.blockCommentContent,
+      Parsimmon.string(CONTENT_END)
+    ).map(([, content]) => this.createBlockComment(content));
+    return parser;
+  });
+
+  protected lineCommentContent: Parser<string> = lazy(() => {
+    let parser = Parsimmon.noneOf("\n").many().map((chars) => chars.join(""));
+    return parser;
+  });
+
+  protected blockCommentContent: Parser<string> = lazy(() => {
+    let parser = Parsimmon.noneOf(CONTENT_END).many().map((chars) => chars.join(""));
     return parser;
   });
 
@@ -288,9 +324,19 @@ export class BaseZenmlParser {
     return nodes;
   }
 
-  protected createText(string: string): Nodes {
-    let text = this.document.createTextNode(string);
+  protected createText(content: string): Nodes {
+    let text = this.document.createTextNode(content);
     return [text];
+  }
+
+  protected createLineComment(content: string): Nodes {
+    let comment = this.document.createComment(content);
+    return [comment];
+  }
+
+  protected createBlockComment(content: string): Nodes {
+    let comment = this.document.createComment(content);
+    return [comment];
   }
 
   protected processMacro(name: string, marks: Array<ZenmlMark>, attributes: ZenmlAttributes, childrenList: Array<Nodes>): Nodes {
