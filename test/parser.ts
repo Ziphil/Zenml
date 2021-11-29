@@ -26,30 +26,30 @@ function shouldFail(input: string, options?: BaseZenmlParserOptions): void {
 
 describe("elements and texts", () => {
   test("basic", () => {
-    shouldEquivalent($`texttext`, $`texttext`);
-    shouldEquivalent($`\element<text>`, $`<element>text</element>`);
+    shouldEquivalent(`texttext`, `texttext`);
+    shouldEquivalent(`\\element<text>`, `<element>text</element>`);
   });
   test("with attributes", () => {
-    shouldEquivalent($`\element|attr="val"|<text>`, $`<element attr="val">text</element>`);
-    shouldEquivalent($`\element|attr="val",foo="bar",neko="mofu"|<text>`, $`<element attr="val" foo="bar" neko="mofu">text</element>`);
+    shouldEquivalent(`\\element|attr="val"|<text>`, `<element attr="val">text</element>`);
+    shouldEquivalent(`\\element|attr="val",foo="bar",neko="mofu"|<text>`, `<element attr="val" foo="bar" neko="mofu">text</element>`);
   });
   test("no attributes", () => {
-    shouldEquivalent($`\element||<no attr>`, $`<element>no attr</element>`);
+    shouldEquivalent(`\\element||<no attr>`, `<element>no attr</element>`);
   });
   test("boolean attributes", () => {
-    shouldEquivalent($`\element|bool|<text>`, $`<element bool="bool">text</element>`);
-    shouldEquivalent($`\element|bool,another|<text>`, $`<element bool="bool" another="another">text</element>`);
+    shouldEquivalent(`\\element|bool|<text>`, `<element bool="bool">text</element>`);
+    shouldEquivalent(`\\element|bool,another|<text>`, `<element bool="bool" another="another">text</element>`);
   });
   test("empty", () => {
-    shouldEquivalent($`\element;`, $`<element/>`);
-    shouldEquivalent($`\element|attr="value"|;`, $`<element attr="value"/>`);
+    shouldEquivalent(`\\element;`, `<element/>`);
+    shouldEquivalent(`\\element|attr="value"|;`, `<element attr="value"/>`);
   });
   test("complex", () => {
-    shouldEquivalent($`\nest<text\nest<inner>text>`, $`<nest>text<nest>inner</nest>text</nest>`);
+    shouldEquivalent(`\\nest<text\\nest<inner>text>`, `<nest>text<nest>inner</nest>text</nest>`);
     shouldEquivalent($`
-      \foo<\bar<\baz<neko>>>outer\foo<\bar<neko>>
-      \foo<
-        neko\bar<mofu>
+      \\foo<\\bar<\\baz<neko>>>outer\\foo<\\bar<neko>>
+      \\foo<
+        neko\\bar<mofu>
         neko
       >
     `, $`
@@ -65,22 +65,42 @@ describe("elements and texts", () => {
 describe("special elements", () => {
   test("basic", () => {
     let options = {specialElementNames: {brace: "brace", bracket: "bracket", slash: "slash"}};
-    shouldEquivalent($`{text}`, $`<brace>text</brace>`, options);
-    shouldEquivalent($`[text]`, $`<bracket>text</bracket>`, options);
-    shouldEquivalent($`/text/`, $`<slash>text</slash>`, options);
+    shouldEquivalent(`{text}`, `<brace>text</brace>`, options);
+    shouldEquivalent(`[text]`, `<bracket>text</bracket>`, options);
+    shouldEquivalent(`/text/`, `<slash>text</slash>`, options);
   });
   test("nested", () => {
     let options = {specialElementNames: {brace: "brace", bracket: "bracket", slash: "slash"}};
-    shouldEquivalent($`{aaa[bbb/ccc/ddd{eee}]fff}/ggg/`, $`<brace>aaa<bracket>bbb<slash>ccc</slash>ddd<brace>eee</brace></bracket>fff</brace><slash>ggg</slash>`, options);
-    shouldEquivalent($`{\foo</te[xt]/>}`, $`<brace><foo><slash>te<bracket>xt</bracket></slash></foo></brace>`, options);
+    shouldEquivalent(`{aaa[bbb/ccc/ddd{eee}]fff}/ggg/`, `<brace>aaa<bracket>bbb<slash>ccc</slash>ddd<brace>eee</brace></bracket>fff</brace><slash>ggg</slash>`, options);
+    shouldEquivalent(`{\\foo</te[xt]/>}`, `<brace><foo><slash>te<bracket>xt</bracket></slash></foo></brace>`, options);
+  });
+});
+
+describe("processing instructions", () => {
+  test("zenml declaration", () => {
+    shouldEquivalent(`\\zml?|version="1.1"|;`, ``);
+  });
+  test("xml declaration", () => {
+    shouldEquivalent(`\\xml?|version="1.0",encoding="UTF-8"|;`, `<?xml version="1.0" encoding="UTF-8"?>`);
+    shouldEquivalent($`
+      \\xml?|version="1.0",encoding="UTF-8"|;
+      \\foo<text>
+    `, $`
+      <?xml version="1.0" encoding="UTF-8"?>
+      <foo>text</foo>
+    `);
+  });
+  test("processing instructions", () => {
+    shouldEquivalent(`\\instr?|attr="val",foo="bar"|<texttext>`, `<?instr attr="val" foo="bar" texttext?>`);
+    shouldEquivalent(`\\instr?<\`<\`>>`, `<?instr <>?>`);
   });
 });
 
 describe("block comments", () => {
   test("basic", () => {
-    shouldEquivalent($`#<comment>`, $`<!--comment-->`);
-    shouldEquivalent($`#<comment>outer#<another>`, $`<!--comment-->outer<!--another-->`);
-    shouldEquivalent($`\foo<#<comment>outer>`, $`<foo><!--comment-->outer</foo>`);
+    shouldEquivalent(`#<comment>`, `<!--comment-->`);
+    shouldEquivalent(`#<comment>outer#<another>`, `<!--comment-->outer<!--another-->`);
+    shouldEquivalent(`\\foo<#<comment>outer>`, `<foo><!--comment-->outer</foo>`);
   });
   test("multiline", () => {
     shouldEquivalent($`
@@ -108,12 +128,12 @@ describe("line comments", () => {
       <!--line comment-->text
     `);
     shouldEquivalent($`
-      \foo<
-        ##\foo<>
+      \\foo<
+        ##\\foo<>
       >
     `, $`
       <foo>
-        <!--\foo<>--></foo>
+        <!--\\foo<>--></foo>
     `);
   });
   test("ending at eof", () => {

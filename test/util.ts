@@ -2,7 +2,7 @@
 
 
 export function dedent(templateStrings: TemplateStringsArray, ...values: Array<unknown>): string {
-  let strings = [...templateStrings.raw];
+  let strings = [...templateStrings];
   strings[strings.length - 1] = strings[strings.length - 1].replace(/\r?\n([\t ]*)$/, "");
   let indentLengths = strings.reduce<Array<number>>((previous, string) => {
     let match = string.match(/\n([\t ]+|(?!\s).)/g);
