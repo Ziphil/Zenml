@@ -358,38 +358,73 @@ export class BaseZenmlParser {
   });
 
   protected createElement(name: string, marks: Array<ZenmlMark>, attributes: ZenmlAttributes, childrenList: Array<Nodes>): Nodes {
-    if (childrenList.length <= 1 || marks.includes("multiple")) {
-      return this.createNormalElement(name, attributes, childrenList);
+    if (marks.includes("instruction")) {
+      return this.createInstruction(name, marks, attributes, childrenList);
     } else {
-      throw "normal element cannot have more than one argument";
+      return this.createNormalElement(name, marks, attributes, childrenList);
     }
   }
 
-  protected createNormalElement(name: string, attributes: ZenmlAttributes, childrenList: Array<Nodes>): Nodes {
-    let nodes = [];
-    if (childrenList.length <= 0) {
-      childrenList = [[]];
-    }
-    for (let children of childrenList) {
-      let element = this.document.createElement(name);
-      for (let attribute of attributes) {
-        element.setAttribute(attribute[0], attribute[1]);
+  protected createInstruction(name: string, marks: Array<ZenmlMark>, attributes: ZenmlAttributes, childrenList: Array<Nodes>): Nodes {
+    if (name === SYSTEM_INSTRUCTION_NAME) {
+      if (childrenList.length <= 0) {
+        return [];
+      } else {
+        throw "ZenML declaration cannot have arguments";
       }
-      for (let child of children) {
-        element.appendChild(child);
+    } else {
+      if (childrenList.length <= 1) {
+        let children = childrenList[0] ?? [];
+        let contents = [];
+        for (let attribute of attributes) {
+          contents.push(`${attribute[0]}="${attribute[1]}"`);
+        }
+        for (let child of children) {
+          if (child.nodeType === 3) {
+            let text = child as Text;
+            contents.push(text.data);
+          } else {
+            throw "Contents of a processing instruction must be texts";
+          }
+        }
+        let content = contents.join(" ");
+        let instruction = this.document.createProcessingInstruction(name, content);
+        return [instruction];
+      } else {
+        throw "Processing instruction cannot have more than one argument";
       }
-      nodes.push(element);
     }
-    return nodes;
+  }
+
+  protected createNormalElement(name: string, marks: Array<ZenmlMark>, attributes: ZenmlAttributes, childrenList: Array<Nodes>): Nodes {
+    if (childrenList.length <= 1 || marks.includes("multiple")) {
+      let nodes = [];
+      if (childrenList.length <= 0) {
+        childrenList = [[]];
+      }
+      for (let children of childrenList) {
+        let element = this.document.createElement(name);
+        for (let attribute of attributes) {
+          element.setAttribute(attribute[0], attribute[1]);
+        }
+        for (let child of children) {
+          element.appendChild(child);
+        }
+        nodes.push(element);
+      }
+      return nodes;
+    } else {
+      throw "Normal element cannot have more than one argument";
+    }
   }
 
   protected createSpecialElement(kind: ZenmlSpecialElementKind, children: Nodes): Nodes {
     let name = this.options.specialElementNames?.[kind];
     if (name !== undefined) {
-      let nodes = this.createNormalElement(name, [], [children]);
+      let nodes = this.createNormalElement(name, [], [], [children]);
       return nodes;
     } else {
-      throw `no name specified for ${kind} elements`;
+      throw `No name specified for ${kind} elements`;
     }
   }
 
@@ -409,14 +444,14 @@ export class BaseZenmlParser {
   }
 
   protected processMacro(name: string, marks: Array<ZenmlMark>, attributes: ZenmlAttributes, childrenList: Array<Nodes>): Nodes {
-    throw "to be implemented";
+    throw "To be implemented";
   }
 
   protected createStringEscape(char: string): string {
     if (ESCAPE_CHARS.includes(char)) {
       return char;
     } else {
-      throw "invalid escape";
+      throw "Invalid escape";
     }
   }
 
@@ -424,7 +459,7 @@ export class BaseZenmlParser {
     if (ESCAPE_CHARS.includes(char)) {
       return char;
     } else {
-      throw "invalid escape";
+      throw "Invalid escape";
     }
   }
 
