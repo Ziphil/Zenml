@@ -433,25 +433,21 @@ export class BaseZenmlParser {
   }
 
   protected createNormalElement(name: string, marks: Array<ZenmlMark>, attributes: ZenmlAttributes, childrenList: Array<Nodes>): Nodes {
-    if (childrenList.length <= 1 || marks.includes("multiple")) {
-      let nodes = [];
-      if (childrenList.length <= 0) {
-        childrenList = [[]];
-      }
-      for (let children of childrenList) {
-        let element = this.document.createElement(name);
-        for (let attribute of attributes) {
-          element.setAttribute(attribute[0], attribute[1]);
-        }
-        for (let child of children) {
-          element.appendChild(child);
-        }
-        nodes.push(element);
-      }
-      return nodes;
-    } else {
-      throw "Normal element cannot have more than one argument";
+    let nodes = [];
+    if (childrenList.length <= 0) {
+      childrenList = [[]];
     }
+    for (let children of childrenList) {
+      let element = this.document.createElement(name);
+      for (let attribute of attributes) {
+        element.setAttribute(attribute[0], attribute[1]);
+      }
+      for (let child of children) {
+        element.appendChild(child);
+      }
+      nodes.push(element);
+    }
+    return nodes;
   }
 
   protected createSpecialElement(kind: ZenmlSpecialElementKind, children: Nodes): Nodes {
