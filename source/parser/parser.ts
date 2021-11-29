@@ -475,10 +475,6 @@ export class BaseZenmlParser {
     return [comment];
   }
 
-  protected processMacro(name: string, marks: Array<ZenmlMark>, attributes: ZenmlAttributes, childrenList: Array<Nodes>): Nodes {
-    throw "To be implemented";
-  }
-
   protected createStringEscape(char: string): string {
     if (ESCAPE_CHARS.includes(char)) {
       return char;
