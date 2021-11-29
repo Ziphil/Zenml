@@ -1,12 +1,12 @@
 //
 
 import {
-  XMLSerializer
-} from "@xmldom/xmldom";
-import {
   BaseZenmlParser,
   BaseZenmlParserOptions
 } from "../source";
+import {
+  XMLSerializer
+} from "../source/dom";
 import {
   dedent as $
 } from "./util";
@@ -73,6 +73,28 @@ describe("special elements", () => {
     let options = {specialElementNames: {brace: "brace", bracket: "bracket", slash: "slash"}};
     shouldEquivalent(`{aaa[bbb/ccc/ddd{eee}]fff}/ggg/`, `<brace>aaa<bracket>bbb<slash>ccc</slash>ddd<brace>eee</brace></bracket>fff</brace><slash>ggg</slash>`, options);
     shouldEquivalent(`{\\foo</te[xt]/>}`, `<brace><foo><slash>te<bracket>xt</bracket></slash></foo></brace>`, options);
+  });
+});
+
+describe("marks", () => {
+  test("verbal", () => {
+    shouldEquivalent(`\\foo~<&#;>`, `<foo>&amp;#;</foo>`);
+    shouldEquivalent(`\\foo~<\\fake|attr="val"|<fake\`>>`, `<foo>\\fake|attr="val"|&lt;fake></foo>`);
+  });
+  test("trim", () => {
+    shouldEquivalent($`
+      \\foo*<
+        testtest
+          indented
+            more indented
+        testtest
+      >
+    `, $`
+      <foo>testtest
+        indented
+          more indented
+      testtest</foo>
+    `);
   });
 });
 
