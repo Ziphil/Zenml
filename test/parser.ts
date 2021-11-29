@@ -100,14 +100,14 @@ describe("marks", () => {
       \\foo*<
         testtest\\bar<
           indented
-            more> \\baz<indented
-        testtest>
+            more \\baz<indented
+        testtest>>
       >
     `, $`
       <foo>testtest<bar>
         indented
-          more</bar> <baz>indented
-      testtest</baz></foo>
+          more <baz>indented
+      testtest</baz></bar></foo>
     `);
   });
   test("multiple", () => {
