@@ -19,5 +19,3 @@ export function dedent(templateStrings: TemplateStringsArray, ...values: Array<u
   let output = strings.join("").replace(/^\r?\n/, "");
   return output;
 }
-
-export let $ = dedent;

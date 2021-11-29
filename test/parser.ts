@@ -8,40 +8,45 @@ import {
   BaseZenmlParserOptions
 } from "../source";
 import {
-  $
+  dedent as $
 } from "./util";
 
 
 let serializer = new XMLSerializer();
 
-function compare(input: string, output: string, options?: BaseZenmlParserOptions): void {
+function shouldEquivalent(input: string, output: string, options?: BaseZenmlParserOptions): void {
   let parser = new BaseZenmlParser(options);
   expect(serializer.serializeToString(parser.tryParse(input))).toBe(output);
 }
 
+function shouldFail(input: string, options?: BaseZenmlParserOptions): void {
+  let parser = new BaseZenmlParser(options);
+  expect(() => parser.tryParse(input)).toThrow();
+}
+
 describe("elements and texts", () => {
   test("basic", () => {
-    compare($`texttext`, $`texttext`);
-    compare($`\element<text>`, $`<element>text</element>`);
+    shouldEquivalent($`texttext`, $`texttext`);
+    shouldEquivalent($`\element<text>`, $`<element>text</element>`);
   });
   test("with attributes", () => {
-    compare($`\element|attr="val"|<text>`, $`<element attr="val">text</element>`);
-    compare($`\element|attr="val",foo="bar",neko="mofu"|<text>`, $`<element attr="val" foo="bar" neko="mofu">text</element>`);
+    shouldEquivalent($`\element|attr="val"|<text>`, $`<element attr="val">text</element>`);
+    shouldEquivalent($`\element|attr="val",foo="bar",neko="mofu"|<text>`, $`<element attr="val" foo="bar" neko="mofu">text</element>`);
   });
   test("no attributes", () => {
-    compare($`\element||<no attr>`, $`<element>no attr</element>`);
+    shouldEquivalent($`\element||<no attr>`, $`<element>no attr</element>`);
   });
   test("boolean attributes", () => {
-    compare($`\element|bool|<text>`, $`<element bool="bool">text</element>`);
-    compare($`\element|bool,another|<text>`, $`<element bool="bool" another="another">text</element>`);
+    shouldEquivalent($`\element|bool|<text>`, $`<element bool="bool">text</element>`);
+    shouldEquivalent($`\element|bool,another|<text>`, $`<element bool="bool" another="another">text</element>`);
   });
   test("empty", () => {
-    compare($`\element;`, $`<element/>`);
-    compare($`\element|attr="value"|;`, $`<element attr="value"/>`);
+    shouldEquivalent($`\element;`, $`<element/>`);
+    shouldEquivalent($`\element|attr="value"|;`, $`<element attr="value"/>`);
   });
   test("complex", () => {
-    compare($`\nest<text\nest<inner>text>`, $`<nest>text<nest>inner</nest>text</nest>`);
-    compare($`
+    shouldEquivalent($`\nest<text\nest<inner>text>`, $`<nest>text<nest>inner</nest>text</nest>`);
+    shouldEquivalent($`
       \foo<\bar<\baz<neko>>>outer\foo<\bar<neko>>
       \foo<
         neko\bar<mofu>
@@ -60,25 +65,25 @@ describe("elements and texts", () => {
 describe("special elements", () => {
   test("basic", () => {
     let options = {specialElementNames: {brace: "brace", bracket: "bracket", slash: "slash"}};
-    compare($`{text}`, $`<brace>text</brace>`, options);
-    compare($`[text]`, $`<bracket>text</bracket>`, options);
-    compare($`/text/`, $`<slash>text</slash>`, options);
+    shouldEquivalent($`{text}`, $`<brace>text</brace>`, options);
+    shouldEquivalent($`[text]`, $`<bracket>text</bracket>`, options);
+    shouldEquivalent($`/text/`, $`<slash>text</slash>`, options);
   });
   test("nested", () => {
     let options = {specialElementNames: {brace: "brace", bracket: "bracket", slash: "slash"}};
-    compare($`{aaa[bbb/ccc/ddd{eee}]fff}/ggg/`, $`<brace>aaa<bracket>bbb<slash>ccc</slash>ddd<brace>eee</brace></bracket>fff</brace><slash>ggg</slash>`, options);
-    compare($`{\foo</te[xt]/>}`, $`<brace><foo><slash>te<bracket>xt</bracket></slash></foo></brace>`, options);
+    shouldEquivalent($`{aaa[bbb/ccc/ddd{eee}]fff}/ggg/`, $`<brace>aaa<bracket>bbb<slash>ccc</slash>ddd<brace>eee</brace></bracket>fff</brace><slash>ggg</slash>`, options);
+    shouldEquivalent($`{\foo</te[xt]/>}`, $`<brace><foo><slash>te<bracket>xt</bracket></slash></foo></brace>`, options);
   });
 });
 
 describe("block comments", () => {
   test("basic", () => {
-    compare($`#<comment>`, $`<!--comment-->`);
-    compare($`#<comment>outer#<another>`, $`<!--comment-->outer<!--another-->`);
-    compare($`\foo<#<comment>outer>`, $`<foo><!--comment-->outer</foo>`);
+    shouldEquivalent($`#<comment>`, $`<!--comment-->`);
+    shouldEquivalent($`#<comment>outer#<another>`, $`<!--comment-->outer<!--another-->`);
+    shouldEquivalent($`\foo<#<comment>outer>`, $`<foo><!--comment-->outer</foo>`);
   });
   test("multiline", () => {
-    compare($`
+    shouldEquivalent($`
       #<
         multiline block comment
         second line
@@ -94,7 +99,7 @@ describe("block comments", () => {
 
 describe("line comments", () => {
   test("basic", () => {
-    compare($`
+    shouldEquivalent($`
       text
       ##line comment
       text
@@ -102,7 +107,7 @@ describe("line comments", () => {
       text
       <!--line comment-->text
     `);
-    compare($`
+    shouldEquivalent($`
       \foo<
         ##\foo<>
       >
@@ -112,7 +117,7 @@ describe("line comments", () => {
     `);
   });
   test("ending at eof", () => {
-    compare($`
+    shouldEquivalent($`
       text
       ##line comment ends at eof
     `, $`
@@ -123,15 +128,19 @@ describe("line comments", () => {
 });
 
 describe("escapes", () => {
-  test("in strings", () => {
-    compare("\\foo|attr=\"`& `< `> `' `\" `{ `} `[ `] `/ `\\ `| `` `# `;\"|;", "<foo attr=\"&amp; &lt; > ' &quot; { } [ ] / \\ | ` # ;\"/>");
-  });
   test("in texts", () => {
-    compare("`& `< `> `' `\" `{ `} `[ `] `/ `\\ `| `` `# `;", "&amp; &lt; > ' \" { } [ ] / \\ | ` # ;");
-    compare("\\foo<`>>", "<foo>></foo>");
+    shouldEquivalent("`& `< `> `' `\" `{ `} `[ `] `/ `\\ `| `` `# `;", "&amp; &lt; > ' \" { } [ ] / \\ | ` # ;");
+    shouldEquivalent("\\foo<`>>", "<foo>></foo>");
   });
-  test("invalid in strings", () => {
+  test("in strings", () => {
+    shouldEquivalent("\\foo|attr=\"`& `< `> `' `\" `{ `} `[ `] `/ `\\ `| `` `# `;\"|;", "<foo attr=\"&amp; &lt; > ' &quot; { } [ ] / \\ | ` # ;\"/>");
   });
   test("invalid in texts", () => {
+    shouldFail("`@");
+    shouldFail("`s");
+  });
+  test("invalid in strings", () => {
+    shouldFail("\\foo|attr=\"`@\"");
+    shouldFail("\\foo|attr=\"`s\"");
   });
 });
