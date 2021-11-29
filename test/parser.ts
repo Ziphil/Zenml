@@ -105,8 +105,11 @@ describe("line comments", () => {
 
 describe("escapes", () => {
   test("in strings", () => {
+    compare("\\foo|attr=\"`& `< `> `' `\" `{ `} `[ `] `/ `\\ `| `` `# `;\"|;", "<foo attr=\"&amp; &lt; > ' &quot; { } [ ] / \\ | ` # ;\"/>");
   });
   test("in texts", () => {
+    compare("`& `< `> `' `\" `{ `} `[ `] `/ `\\ `| `` `# `;", "&amp; &lt; > ' \" { } [ ] / \\ | ` # ;");
+    compare("\\foo<`>>", "<foo>></foo>");
   });
   test("invalid in strings", () => {
   });
