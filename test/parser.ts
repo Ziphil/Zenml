@@ -4,7 +4,8 @@ import {
   XMLSerializer
 } from "xmldom";
 import {
-  BaseZenmlParser
+  BaseZenmlParser,
+  BaseZenmlParserOptions
 } from "../source";
 import {
   $
@@ -13,8 +14,8 @@ import {
 
 let serializer = new XMLSerializer();
 
-function compare(input: string, output: string): void {
-  let parser = new BaseZenmlParser();
+function compare(input: string, output: string, options?: BaseZenmlParserOptions): void {
+  let parser = new BaseZenmlParser(options);
   expect(serializer.serializeToString(parser.tryParse(input))).toBe(output);
 }
 
@@ -49,6 +50,20 @@ describe("elements and texts", () => {
         neko
       </foo>
     `);
+  });
+});
+
+describe("special elements", () => {
+  test("basic", () => {
+    let options = {specialElementNames: {brace: "brace", bracket: "bracket", slash: "slash"}};
+    compare($`{text}`, $`<brace>text</brace>`, options);
+    compare($`[text]`, $`<bracket>text</bracket>`, options);
+    compare($`/text/`, $`<slash>text</slash>`, options);
+  });
+  test("nested", () => {
+    let options = {specialElementNames: {brace: "brace", bracket: "bracket", slash: "slash"}};
+    compare($`{aaa[bbb/ccc/ddd{eee}]fff}/ggg/`, $`<brace>aaa<bracket>bbb<slash>ccc</slash>ddd<brace>eee</brace></bracket>fff</brace><slash>ggg</slash>`, options);
+    compare($`{\foo</te[xt]/>}`, $`<brace><foo><slash>te<bracket>xt</bracket></slash></foo></brace>`, options);
   });
 });
 
