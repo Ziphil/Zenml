@@ -75,6 +75,12 @@ describe("special elements", () => {
     shouldEquivalent(`{\\foo</te[xt]/>}`, `<brace><foo><slash>te<bracket>xt</bracket></slash></foo></brace>`, options);
     shouldEquivalent(`/\\foo</\\foo<ab/cd/ef>/>/`, `<slash><foo><slash><foo>ab<slash>cd</slash>ef</foo></slash></foo></slash>`, options);
   });
+  test("partly specified", () => {
+    let options = {specialElementNames: {brace: "brace"}};
+    shouldEquivalent(`{text}`, `<brace>text</brace>`, options);
+    shouldFail(`[text]`, options);
+    shouldFail(`/text/`, options);
+  });
 });
 
 describe("marks", () => {
@@ -121,6 +127,11 @@ describe("processing instructions", () => {
   test("zenml declaration", () => {
     shouldEquivalent(`\\zml?|version="1.1"|;`, ``);
   });
+  test("invalid zenml declaration", () => {
+    shouldFail(`\\zml?|version="1.1"|<text>`);
+    shouldFail(`\\zml?|version="1.1"|<one><two>`);
+    shouldFail(`\\zml?|version="1.1"|<>`);
+  });
   test("xml declaration", () => {
     shouldEquivalent(`\\xml?|version="1.0",encoding="UTF-8"|;`, `<?xml version="1.0" encoding="UTF-8"?>`);
     shouldEquivalent($`
@@ -130,6 +141,12 @@ describe("processing instructions", () => {
       <?xml version="1.0" encoding="UTF-8"?>
       <foo>text</foo>
     `);
+  });
+  test("invalid xml declaration 1", () => {
+    shouldFail(`\\xml?|version="1.0",encoding="UTF-8"|<one><two>`);
+  });
+  test("invalid xml declaration 2", () => {
+    shouldFail(`\\xml?|version="1.0",encoding="UTF-8"|<\element<not allowed>>`);
   });
   test("processing instructions", () => {
     shouldEquivalent(`\\instr?|attr="val",foo="bar"|<texttext>`, `<?instr attr="val" foo="bar" texttext?>`);
