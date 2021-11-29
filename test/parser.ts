@@ -73,6 +73,7 @@ describe("special elements", () => {
     let options = {specialElementNames: {brace: "brace", bracket: "bracket", slash: "slash"}};
     shouldEquivalent(`{aaa[bbb/ccc/ddd{eee}]fff}/ggg/`, `<brace>aaa<bracket>bbb<slash>ccc</slash>ddd<brace>eee</brace></bracket>fff</brace><slash>ggg</slash>`, options);
     shouldEquivalent(`{\\foo</te[xt]/>}`, `<brace><foo><slash>te<bracket>xt</bracket></slash></foo></brace>`, options);
+    shouldEquivalent(`/\\foo</\\foo<ab/cd/ef>/>/`, `<slash><foo><slash><foo>ab<slash>cd</slash>ef</foo></slash></foo></slash>`, options);
   });
 });
 
@@ -95,6 +96,24 @@ describe("marks", () => {
           more indented
       testtest</foo>
     `);
+    shouldEquivalent($`
+      \\foo*<
+        testtest\\bar<
+          indented
+            more> \\baz<indented
+        testtest>
+      >
+    `, $`
+      <foo>testtest<bar>
+        indented
+          more</bar> <baz>indented
+      testtest</baz></foo>
+    `);
+  });
+  test("multiple", () => {
+    shouldEquivalent(`\\foo+<1><2><3>`, `<foo>1</foo><foo>2</foo><foo>3</foo>`);
+    shouldEquivalent(`\\foo+|attr="value"|<1><2>`, `<foo attr="value">1</foo><foo attr="value">2</foo>`);
+    shouldEquivalent(`\\foo+;`, `<foo/>`);
   });
 });
 
