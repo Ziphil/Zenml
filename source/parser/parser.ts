@@ -1,8 +1,5 @@
 //
 
-import {
-  DOMImplementation
-} from "@xmldom/xmldom";
 import Parsimmon from "parsimmon";
 import {
   Parser,
@@ -11,6 +8,10 @@ import {
   seq
 } from "parsimmon";
 import "./extension";
+import {
+  DOMImplementation,
+  dedentChildren
+} from "../dom";
 import {
   create
 } from "./util";
@@ -61,11 +62,13 @@ type ZenmlAttribute = readonly [name: string, value: string];
 type ZenmlAttributes = ReadonlyArray<ZenmlAttribute>;
 type ZenmlTagSpec = readonly [name: string, marks: Array<ZenmlMark>, attributes: ZenmlAttributes, macro: boolean];
 
-type BaseZenmlParserState = {inSlash?: boolean};
+export type Nodes = Array<Node>;
 type ParserWithState<T> = (state: BaseZenmlParserState) => Parser<T>;
 
-export type Nodes = Array<Node>;
-
+type BaseZenmlParserState = {
+  verbal?: boolean,
+  inSlash?: boolean
+};
 export type BaseZenmlParserOptions = {
   document?: Document,
   specialElementNames?: {brace?: string, bracket?: string, slash?: string};
@@ -99,24 +102,41 @@ export class BaseZenmlParser {
   });
 
   protected nodes: ParserWithState<Nodes> = create((state) => {
-    let innerParsers = [];
-    innerParsers.push(lazy(() => this.element(state)));
-    innerParsers.push(lazy(() => this.braceElement(state)), lazy(() => this.bracketElement(state)));
-    if (!state.inSlash) {
-      innerParsers.push(lazy(() => this.slashElement(state)));
+    if (state.verbal) {
+      let parser = this.verbalText;
+      return parser;
+    } else {
+      let innerParsers = [];
+      innerParsers.push(lazy(() => this.element(state)));
+      innerParsers.push(lazy(() => this.braceElement(state)), lazy(() => this.bracketElement(state)));
+      if (!state.inSlash) {
+        innerParsers.push(lazy(() => this.slashElement(state)));
+      }
+      innerParsers.push(this.comment, this.text);
+      let parser = alt(...innerParsers).many().map((nodesList) => nodesList.flat());
+      return parser;
     }
-    innerParsers.push(this.comment, this.text);
-    let parser = alt(...innerParsers).many().map((nodesList) => nodesList.flat());
-    return parser;
   });
 
   protected element: ParserWithState<Nodes> = create((state) => {
     let parser = seq(
-      this.tag,
-      this.childrenList(state)
-    ).mapCatch(([tagSpec, childrenList]) => {
+      this.tag
+    ).chain(([tagSpec]) => {
       let [name, marks, attributes, macro] = tagSpec;
-      let element = (macro) ? this.processMacro(name, marks, attributes, childrenList) : this.createElement(name, marks, attributes, childrenList);
+      let nextState = state;
+      if (marks.includes("verbal")) {
+        nextState = {...nextState, verbal: true};
+      }
+      let nextParser = this.childrenList(nextState).map((childrenList) => [tagSpec, childrenList] as const);
+      return nextParser;
+    }).map(([tagSpec, childrenList]) => {
+      let [name, marks, attributes, macro] = tagSpec;
+      if (marks.includes("trim")) {
+        for (let children of childrenList) {
+          dedentChildren(children);
+        }
+      }
+      let element = this.createElement(name, marks, attributes, childrenList);
       return element;
     });
     return parser;
@@ -283,8 +303,18 @@ export class BaseZenmlParser {
     return parser;
   });
 
+  protected verbalText: Parser<Nodes> = lazy(() => {
+    let parser = this.verbalTextContentFragment.atLeast(1).mapCatch((contents) => this.createText(contents.join("")));
+    return parser;
+  });
+
   protected textContentFragment: Parser<string> = lazy(() => {
     let parser = alt(this.textEscape, this.plainTextContentFragment);
+    return parser;
+  });
+
+  protected verbalTextContentFragment: Parser<string> = lazy(() => {
+    let parser = alt(this.textEscape, this.plainVerbalTextContentFragment);
     return parser;
   });
 
@@ -296,6 +326,12 @@ export class BaseZenmlParser {
     for (let [, char] of Object.entries(SPECIAL_ELEMENT_ENDS)) {
       exclusion += char;
     }
+    let parser = Parsimmon.noneOf(exclusion).atLeast(1).map((chars) => chars.join(""));
+    return parser;
+  });
+
+  protected plainVerbalTextContentFragment: Parser<string> = lazy(() => {
+    let exclusion = ESCAPE_START + CONTENT_END;
     let parser = Parsimmon.noneOf(exclusion).atLeast(1).map((chars) => chars.join(""));
     return parser;
   });
