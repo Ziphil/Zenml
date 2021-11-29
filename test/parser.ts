@@ -142,15 +142,15 @@ describe("processing instructions", () => {
       <foo>text</foo>
     `);
   });
-  test("invalid xml declaration 1", () => {
-    shouldFail(`\\xml?|version="1.0",encoding="UTF-8"|<one><two>`);
-  });
-  test("invalid xml declaration 2", () => {
-    shouldFail(`\\xml?|version="1.0",encoding="UTF-8"|<\element<not allowed>>`);
-  });
   test("processing instructions", () => {
     shouldEquivalent(`\\instr?|attr="val",foo="bar"|<texttext>`, `<?instr attr="val" foo="bar" texttext?>`);
     shouldEquivalent(`\\instr?<\`<\`>>`, `<?instr <>?>`);
+  });
+  test("invalid processing instructions 1", () => {
+    shouldFail(`\\instr?|attr="val"|<one><two>`);
+  });
+  test("invalid processing instructions 2", () => {
+    shouldFail(`\\instr?|attr="val"|<\\element<not allowed>>`);
   });
 });
 
