@@ -11,6 +11,9 @@ import {
   DOMImplementation
 } from "xmldom";
 import "./extension";
+import {
+  create
+} from "./util";
 
 
 const ELEMENT_START = "\\";
@@ -53,20 +56,31 @@ const REST_IDENTIFIER_CHAR_RANGES = [
 const SPACE_CHAR_STRING = SPACE_CHARS.join("");
 
 type ZenmlMark = keyof typeof MARK_CHARS;
+type ZenmlSpecialElementKind = keyof typeof SPECIAL_ELEMENT_STARTS;
 type ZenmlAttribute = readonly [name: string, value: string];
 type ZenmlAttributes = ReadonlyArray<ZenmlAttribute>;
 type ZenmlTagSpec = readonly [name: string, marks: Array<ZenmlMark>, attributes: ZenmlAttributes, macro: boolean];
 
-type Nodes = Array<Node>;
+type BaseZenmlParserState = {inSlash?: boolean};
+type ParserWithState<T> = (state: BaseZenmlParserState) => Parser<T>;
+
+export type Nodes = Array<Node>;
+
+export type BaseZenmlParserOptions = {
+  document?: Document,
+  specialElementNames?: {brace?: string, bracket?: string, slash?: string};
+};
 
 
 export class BaseZenmlParser {
 
   private readonly document: Document;
+  private readonly options: BaseZenmlParserOptions;
 
-  public constructor() {
+  public constructor(options?: BaseZenmlParserOptions) {
     let implementation = new DOMImplementation();
-    this.document = implementation.createDocument(null, null, null);
+    this.document = options?.document ?? implementation.createDocument(null, null, null);
+    this.options = options ?? {};
   }
 
   public tryParse(input: string): Document {
@@ -74,7 +88,7 @@ export class BaseZenmlParser {
   }
 
   protected root: Parser<Document> = lazy(() => {
-    let parser = this.nodes.map((nodes) => {
+    let parser = this.nodes({}).map((nodes) => {
       let document = this.document;
       for (let node of nodes) {
         document.appendChild(node);
@@ -84,16 +98,22 @@ export class BaseZenmlParser {
     return parser;
   });
 
-  protected nodes: Parser<Nodes> = lazy(() => {
-    let innerParsers = [this.element, this.comment, this.text];
+  protected nodes: ParserWithState<Nodes> = create((state) => {
+    let innerParsers = [];
+    innerParsers.push(lazy(() => this.element(state)));
+    innerParsers.push(lazy(() => this.braceElement(state)), lazy(() => this.bracketElement(state)));
+    if (!state.inSlash) {
+      innerParsers.push(lazy(() => this.slashElement(state)));
+    }
+    innerParsers.push(this.comment, this.text);
     let parser = alt(...innerParsers).many().map((nodesList) => nodesList.flat());
     return parser;
   });
 
-  protected element: Parser<Nodes> = lazy(() => {
+  protected element: ParserWithState<Nodes> = create((state) => {
     let parser = seq(
       this.tag,
-      this.childrenList
+      this.childrenList(state)
     ).mapCatch(([tagSpec, childrenList]) => {
       let [name, marks, attributes, macro] = tagSpec;
       let element = (macro) ? this.processMacro(name, marks, attributes, childrenList) : this.createElement(name, marks, attributes, childrenList);
@@ -102,13 +122,49 @@ export class BaseZenmlParser {
     return parser;
   });
 
-  protected childrenList: Parser<Array<Nodes>> = lazy(() => {
-    let parser = alt(this.emptyChildrenChain, this.childrenChain);
+  protected braceElement: ParserWithState<Nodes> = create((state) => {
+    let parser = seq(
+      Parsimmon.string(SPECIAL_ELEMENT_STARTS.brace),
+      this.nodes(state),
+      Parsimmon.string(SPECIAL_ELEMENT_ENDS.brace)
+    ).mapCatch(([, children]) => {
+      let element = this.createSpecialElement("brace", children);
+      return element;
+    });
     return parser;
   });
 
-  protected childrenChain: Parser<Array<Nodes>> = lazy(() => {
-    let parser = this.children.atLeast(1);
+  protected bracketElement: ParserWithState<Nodes> = create((state) => {
+    let parser = seq(
+      Parsimmon.string(SPECIAL_ELEMENT_STARTS.bracket),
+      this.nodes(state),
+      Parsimmon.string(SPECIAL_ELEMENT_ENDS.bracket)
+    ).mapCatch(([, children]) => {
+      let element = this.createSpecialElement("bracket", children);
+      return element;
+    });
+    return parser;
+  });
+
+  protected slashElement: ParserWithState<Nodes> = create((state) => {
+    let parser = seq(
+      Parsimmon.string(SPECIAL_ELEMENT_STARTS.slash),
+      this.nodes({...state, inSlash: true}),
+      Parsimmon.string(SPECIAL_ELEMENT_ENDS.slash)
+    ).mapCatch(([, children]) => {
+      let element = this.createSpecialElement("slash", children);
+      return element;
+    });
+    return parser;
+  });
+
+  protected childrenList: ParserWithState<Array<Nodes>> = create((state) => {
+    let parser = alt(this.emptyChildrenChain, this.childrenChain(state));
+    return parser;
+  });
+
+  protected childrenChain: ParserWithState<Array<Nodes>> = create((state) => {
+    let parser = this.children(state).atLeast(1);
     return parser;
   });
 
@@ -117,10 +173,10 @@ export class BaseZenmlParser {
     return parser;
   });
 
-  protected children: Parser<Array<Node>> = lazy(() => {
+  protected children: ParserWithState<Array<Node>> = create((state) => {
     let parser = seq(
       Parsimmon.string(CONTENT_START),
-      this.nodes,
+      this.nodes(state),
       Parsimmon.string(CONTENT_END)
     ).map(([, children]) => children);
     return parser;
@@ -325,6 +381,16 @@ export class BaseZenmlParser {
       nodes.push(element);
     }
     return nodes;
+  }
+
+  protected createSpecialElement(kind: ZenmlSpecialElementKind, children: Nodes): Nodes {
+    let name = this.options.specialElementNames?.[kind];
+    if (name !== undefined) {
+      let nodes = this.createNormalElement(name, [], [children]);
+      return nodes;
+    } else {
+      throw `no name specified for ${kind} elements`;
+    }
   }
 
   protected createText(content: string): Nodes {
