@@ -5,9 +5,9 @@ export function dedent(templateStrings: TemplateStringsArray, ...values: Array<u
   let strings = [...templateStrings];
   strings[strings.length - 1] = strings[strings.length - 1].replace(/\r?\n([\t ]*)$/, "");
   let indentLengths = strings.reduce<Array<number>>((previous, string) => {
-    let match = string.match(/\n([\t ]+|(?!\s).)/g);
-    if (match) {
-      return previous.concat(match.map((part) => part.match(/[\t ]/g)?.length ?? 0));
+    let matches = string.match(/\n([\t ]+|(?!\s).)/g);
+    if (matches !== null) {
+      return previous.concat(matches.map((match) => match.match(/[\t ]/g)?.length ?? 0));
     } else {
       return previous;
     }
