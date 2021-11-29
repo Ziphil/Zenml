@@ -35,6 +35,10 @@ describe("elements and texts", () => {
     compare($`\element|bool|<text>`, $`<element bool="bool">text</element>`);
     compare($`\element|bool,another|<text>`, $`<element bool="bool" another="another">text</element>`);
   });
+  test("empty", () => {
+    compare($`\element;`, $`<element/>`);
+    compare($`\element|attr="value"|;`, $`<element attr="value"/>`);
+  });
   test("complex", () => {
     compare($`\nest<text\nest<inner>text>`, $`<nest>text<nest>inner</nest>text</nest>`);
     compare($`
