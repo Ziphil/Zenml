@@ -2,7 +2,7 @@
 
 import {
   XMLSerializer
-} from "xmldom";
+} from "@xmldom/xmldom";
 import {
   BaseZenmlParser,
   BaseZenmlParserOptions

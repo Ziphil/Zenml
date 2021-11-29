@@ -1,5 +1,8 @@
 //
 
+import {
+  DOMImplementation
+} from "@xmldom/xmldom";
 import Parsimmon from "parsimmon";
 import {
   Parser,
@@ -7,9 +10,6 @@ import {
   lazy,
   seq
 } from "parsimmon";
-import {
-  DOMImplementation
-} from "xmldom";
 import "./extension";
 import {
   create
