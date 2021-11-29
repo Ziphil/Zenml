@@ -13,7 +13,7 @@ export function dedentChildren(children: Array<Node>): void {
       texts.push(text);
     } else if (child.nodeType === 1) {
       let element = child as Element;
-      texts.concat(element.getDescendantTexts());
+      texts.push(...element.getDescendantTexts());
     }
   }
   let indentLength = 100000;

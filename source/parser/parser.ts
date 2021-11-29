@@ -123,7 +123,7 @@ export class BaseZenmlParser {
       this.tag
     ).chain(([tagSpec]) => {
       let [name, marks, attributes, macro] = tagSpec;
-      let nextState = state;
+      let nextState = {...state, inSlash: false};
       if (marks.includes("verbal")) {
         nextState = {...nextState, verbal: true};
       }
