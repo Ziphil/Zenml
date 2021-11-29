@@ -182,7 +182,7 @@ export class BaseZenmlParser {
       Parsimmon.string(STRING_START),
       this.stringFragment.many(),
       Parsimmon.string(STRING_END)
-    ).map(([, strings]) => strings.join());
+    ).map(([, strings]) => strings.join(""));
     return parser;
   });
 
@@ -192,7 +192,7 @@ export class BaseZenmlParser {
   });
 
   protected plainStringFragment: Parser<string> = lazy(() => {
-    let parser = Parsimmon.noneOf(STRING_START + STRING_END).atLeast(1).map((chars) => chars.join(""));
+    let parser = Parsimmon.noneOf(STRING_START + STRING_END + ESCAPE_START).atLeast(1).map((chars) => chars.join(""));
     return parser;
   });
 
@@ -311,6 +311,9 @@ export class BaseZenmlParser {
 
   protected createNormalElement(name: string, attributes: ZenmlAttributes, childrenList: Array<Nodes>): Nodes {
     let nodes = [];
+    if (childrenList.length <= 0) {
+      childrenList = [[]];
+    }
     for (let children of childrenList) {
       let element = this.document.createElement(name);
       for (let attribute of attributes) {
