@@ -1,8 +1,8 @@
 //
 
 import {
-  BaseZenmlParser,
-  BaseZenmlParserOptions
+  ZenmlParser,
+  ZenmlParserOptions
 } from "../source";
 import {
   XMLSerializer
@@ -14,13 +14,13 @@ import {
 
 let serializer = new XMLSerializer();
 
-function shouldEquivalent(input: string, output: string, options?: BaseZenmlParserOptions): void {
-  let parser = new BaseZenmlParser(options);
+function shouldEquivalent(input: string, output: string, options?: ZenmlParserOptions): void {
+  let parser = new ZenmlParser(options);
   expect(serializer.serializeToString(parser.tryParse(input))).toBe(output);
 }
 
-function shouldFail(input: string, options?: BaseZenmlParserOptions): void {
-  let parser = new BaseZenmlParser(options);
+function shouldFail(input: string, options?: ZenmlParserOptions): void {
+  let parser = new ZenmlParser(options);
   expect(() => parser.tryParse(input)).toThrow();
 }
 

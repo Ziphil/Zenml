@@ -13,6 +13,7 @@ import {
   dedentDescendants
 } from "../dom";
 import {
+  StateParser,
   create
 } from "./util";
 
@@ -63,24 +64,23 @@ type ZenmlAttributes = ReadonlyArray<ZenmlAttribute>;
 type ZenmlTagSpec = readonly [name: string, marks: Array<ZenmlMark>, attributes: ZenmlAttributes, macro: boolean];
 
 export type Nodes = Array<Node>;
-type ParserWithState<T> = (state: BaseZenmlParserState) => Parser<T>;
 
-type BaseZenmlParserState = {
+type ZenmlParserState = {
   verbal?: boolean,
   inSlash?: boolean
 };
-export type BaseZenmlParserOptions = {
+export type ZenmlParserOptions = {
   document?: Document,
   specialElementNames?: {brace?: string, bracket?: string, slash?: string};
 };
 
 
-export class BaseZenmlParser {
+export class ZenmlParser {
 
   private readonly document: Document;
-  private readonly options: BaseZenmlParserOptions;
+  private readonly options: ZenmlParserOptions;
 
-  public constructor(options?: BaseZenmlParserOptions) {
+  public constructor(options?: ZenmlParserOptions) {
     let implementation = new DOMImplementation();
     this.document = options?.document ?? implementation.createDocument(null, null, null);
     this.options = options ?? {};
@@ -101,7 +101,7 @@ export class BaseZenmlParser {
     return parser;
   });
 
-  protected nodes: ParserWithState<Nodes> = create((state) => {
+  protected nodes: StateParser<Nodes, ZenmlParserState> = create((state) => {
     if (state.verbal) {
       let parser = this.verbalText;
       return parser;
@@ -118,7 +118,7 @@ export class BaseZenmlParser {
     }
   });
 
-  protected element: ParserWithState<Nodes> = create((state) => {
+  protected element: StateParser<Nodes, ZenmlParserState> = create((state) => {
     let parser = seq(
       this.tag
     ).chain(([tagSpec]) => {
@@ -142,7 +142,7 @@ export class BaseZenmlParser {
     return parser;
   });
 
-  protected braceElement: ParserWithState<Nodes> = create((state) => {
+  protected braceElement: StateParser<Nodes, ZenmlParserState> = create((state) => {
     let parser = seq(
       Parsimmon.string(SPECIAL_ELEMENT_STARTS.brace),
       this.nodes(state),
@@ -154,7 +154,7 @@ export class BaseZenmlParser {
     return parser;
   });
 
-  protected bracketElement: ParserWithState<Nodes> = create((state) => {
+  protected bracketElement: StateParser<Nodes, ZenmlParserState> = create((state) => {
     let parser = seq(
       Parsimmon.string(SPECIAL_ELEMENT_STARTS.bracket),
       this.nodes(state),
@@ -166,7 +166,7 @@ export class BaseZenmlParser {
     return parser;
   });
 
-  protected slashElement: ParserWithState<Nodes> = create((state) => {
+  protected slashElement: StateParser<Nodes, ZenmlParserState> = create((state) => {
     let parser = seq(
       Parsimmon.string(SPECIAL_ELEMENT_STARTS.slash),
       this.nodes({...state, inSlash: true}),
@@ -178,12 +178,12 @@ export class BaseZenmlParser {
     return parser;
   });
 
-  protected childrenList: ParserWithState<Array<Nodes>> = create((state) => {
+  protected childrenList: StateParser<Array<Nodes>, ZenmlParserState> = create((state) => {
     let parser = alt(this.emptyChildrenChain, this.childrenChain(state));
     return parser;
   });
 
-  protected childrenChain: ParserWithState<Array<Nodes>> = create((state) => {
+  protected childrenChain: StateParser<Array<Nodes>, ZenmlParserState> = create((state) => {
     let parser = this.children(state).atLeast(1);
     return parser;
   });
@@ -193,7 +193,7 @@ export class BaseZenmlParser {
     return parser;
   });
 
-  protected children: ParserWithState<Array<Node>> = create((state) => {
+  protected children: StateParser<Array<Node>, ZenmlParserState> = create((state) => {
     let parser = seq(
       Parsimmon.string(CONTENT_START),
       this.nodes(state),
