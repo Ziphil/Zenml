@@ -3,17 +3,16 @@
 
 export function dedentChildren(children: Array<Node>): void {
   let texts = [];
-  if (children[children.length - 1].nodeType === 3) {
-    let text = children[children.length - 1] as Text;
-    text.data = text.data.replace(/[\x20\n]+$/, "");
+  let firstChild = children[0];
+  let lastChild = children[children.length - 1];
+  if (lastChild.isText()) {
+    lastChild.data = lastChild.data.replace(/[\x20\n]+$/, "");
   }
   for (let child of children) {
-    if (child.nodeType === 3) {
-      let text = child as Text;
-      texts.push(text);
-    } else if (child.nodeType === 1) {
-      let element = child as Element;
-      texts.push(...element.getDescendantTexts());
+    if (child.isText()) {
+      texts.push(child);
+    } else if (child.isElement()) {
+      texts.push(...child.getDescendantTexts());
     }
   }
   let indentLength = 100000;
@@ -28,8 +27,7 @@ export function dedentChildren(children: Array<Node>): void {
   for (let text of texts) {
     text.data = text.data.replace(/\n(\x20+)/g, (match) => "\n" + " ".repeat(match.length - indentLength));
   }
-  if (children[0].nodeType === 3) {
-    let text = children[0] as Text;
-    text.data = text.data.replace(/^[\x20\n]+/, "");
+  if (firstChild.isText()) {
+    firstChild.data = firstChild.data.replace(/^[\x20\n]+/, "");
   }
 }

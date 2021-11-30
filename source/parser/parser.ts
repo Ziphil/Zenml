@@ -416,9 +416,8 @@ export class BaseZenmlParser {
           contents.push(`${attribute[0]}="${attribute[1]}"`);
         }
         for (let child of children) {
-          if (child.nodeType === 3) {
-            let text = child as Text;
-            contents.push(text.data);
+          if (child.isText()) {
+            contents.push(child.data);
           } else {
             throw "Contents of a processing instruction must be texts";
           }
