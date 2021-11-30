@@ -72,7 +72,7 @@ describe("special elements", () => {
   test("nested", () => {
     let options = {specialElementNames: {brace: "brace", bracket: "bracket", slash: "slash"}};
     shouldEquivalent(`{aaa[bbb/ccc/ddd{eee}]fff}/ggg/`, `<brace>aaa<bracket>bbb<slash>ccc</slash>ddd<brace>eee</brace></bracket>fff</brace><slash>ggg</slash>`, options);
-    shouldEquivalent(`{\\foo</te[xt]/>}`, `<brace><foo><slash>te<bracket>xt</bracket></slash></foo></brace>`, options);
+    shouldEquivalent(`{\\foo</te[xt]/outer/text/>}`, `<brace><foo><slash>te<bracket>xt</bracket></slash>outer<slash>text</slash></foo></brace>`, options);
     shouldEquivalent(`/\\foo</\\foo<ab/cd/ef>/>/`, `<slash><foo><slash><foo>ab<slash>cd</slash>ef</foo></slash></foo></slash>`, options);
   });
   test("partly specified", () => {
