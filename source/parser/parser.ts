@@ -71,7 +71,7 @@ type ZenmlParserState = {
 };
 export type ZenmlParserOptions = {
   document?: Document,
-  specialElementNames?: {brace?: string, bracket?: string, slash?: string};
+  specialElementNames?: {brace?: string, bracket?: string, slash?: string}
 };
 
 
