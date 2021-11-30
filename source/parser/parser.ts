@@ -153,7 +153,7 @@ export class ZenmlParser {
     ).chain(([tagSpec]) => {
       let [name, marks, attributes, macro] = tagSpec;
       let nextState = this.determineNextState(state, name, marks, attributes, macro);
-      let nextParser = this.childrenList(nextState).map((childrenList) => [tagSpec, childrenList] as const);
+      let nextParser = this.determineNextParser(nextState, name, marks, attributes, macro);
       return nextParser;
     }).thru(mapCatch(([tagSpec, childrenList]) => {
       let [name, marks, attributes, macro] = tagSpec;
@@ -176,6 +176,18 @@ export class ZenmlParser {
       nextState = {...nextState, pluginName: name};
     }
     return nextState;
+  }
+
+  private determineNextParser(nextState: ZenmlParserState, name: string, marks: ZenmlMarks, attributes: ZenmlAttributes, macro: boolean): Parser<readonly [ZenmlTagSpec, Array<Nodes>]> {
+    let nextParser = seq(
+      this.childrenList(nextState),
+      (name === SYSTEM_INSTRUCTION_NAME && marks.includes("instruction")) ? this.blank : Parsimmon.succeed(null)
+    ).map(([childrenList]) => {
+      let tagSpec = [name, marks, attributes, macro] as const;
+      let result = [tagSpec, childrenList] as const;
+      return result;
+    });
+    return nextParser;
   }
 
   private modifyChildrenList(name: string, marks: ZenmlMarks, attributes: ZenmlAttributes, macro: boolean, childrenList: Array<Nodes>): void {
