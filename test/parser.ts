@@ -1,5 +1,8 @@
 //
 
+import {
+  XMLSerializer
+} from "@zenml/xmldom";
 import Parsimmon from "parsimmon";
 import {
   Parser
@@ -13,9 +16,6 @@ import {
   ZenmlParserOptions,
   ZenmlPlugin
 } from "../source";
-import {
-  XMLSerializer
-} from "../source/dom";
 
 
 let serializer = new XMLSerializer();

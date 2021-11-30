@@ -1,5 +1,9 @@
 //
 
+import {
+  DOMImplementation,
+  dedentDescendants
+} from "@zenml/xmldom";
 import Parsimmon from "parsimmon";
 import {
   Parser,
@@ -8,10 +12,6 @@ import {
   seq
 } from "parsimmon";
 import "./extension";
-import {
-  DOMImplementation,
-  dedentDescendants
-} from "../dom";
 import {
   ZenmlPlugin
 } from "./plugin";
