@@ -27,11 +27,11 @@
     ],
     "testPathIgnorePatterns": [
       "/node_modules/",
-      "test/util\\.ts"
+      "util\\.ts"
     ],
     "coveragePathIgnorePatterns": [
       "/node_modules/",
-      "test/util\\.ts"
+      "util\\.ts"
     ],
     "transform": {
       "^.+\\.(ts|tsx)$": "ts-jest"
