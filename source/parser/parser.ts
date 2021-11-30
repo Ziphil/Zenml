@@ -10,7 +10,7 @@ import {
 import "./extension";
 import {
   DOMImplementation,
-  dedentChildren
+  dedentDescendants
 } from "../dom";
 import {
   create
@@ -133,7 +133,7 @@ export class BaseZenmlParser {
       let [name, marks, attributes, macro] = tagSpec;
       if (marks.includes("trim")) {
         for (let children of childrenList) {
-          dedentChildren(children);
+          dedentDescendants(children);
         }
       }
       let element = this.createElement(name, marks, attributes, childrenList);
