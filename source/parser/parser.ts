@@ -156,7 +156,7 @@ export class ZenmlParser {
       return nextParser;
     }).mapCatch(([tagSpec, childrenList]) => {
       let [name, marks, attributes, macro] = tagSpec;
-      this.modifyChildrenList(name, marks, attributes, childrenList);
+      this.modifyChildrenList(name, marks, attributes, macro, childrenList);
       if (macro) {
         return this.processMacro(name, marks, attributes, childrenList);
       } else {
@@ -177,7 +177,10 @@ export class ZenmlParser {
     return nextState;
   }
 
-  private modifyChildrenList(name: string, marks: ZenmlMarks, attributes: ZenmlAttributes, childrenList: Array<Nodes>): void {
+  private modifyChildrenList(name: string, marks: ZenmlMarks, attributes: ZenmlAttributes, macro: boolean, childrenList: Array<Nodes>): void {
+    if (childrenList.length >= 2 && !macro && !marks.includes("multiple")) {
+      throw "Normal element cannot have more than one argument";
+    }
     if (marks.includes("trim")) {
       for (let children of childrenList) {
         dedentDescendants(children);
