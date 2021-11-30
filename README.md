@@ -14,6 +14,12 @@ It is almost fully compatible with XML, and less redundant and more readable tha
 
 This repository provides a script for parsing a ZenML document to an XML DOM, together with some utility classes which help transform XML documents.
 
+## Installation
+Install via [npm](https://www.npmjs.com/package/@zenml/zenml).
+```
+npm i @zenml/zenml
+```
+
 ## List of ZenML/XML infrastructures
 
 | TypeScript impls | Ruby impls |
