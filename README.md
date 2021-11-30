@@ -20,6 +20,7 @@ This repository provides a script for parsing a ZenML document to an XML DOM, to
 |:--:|:--:|
 | [ZenML parser](https://github.com/Ziphil/Zenml) | [ZenML parser](https://github.com/Ziphil/Zenithal) |
 | ~~Zotica parser~~ | [Zotica parser](https://github.com/Ziphil/ZenithalMathWeb) |
-| ~~utility for XML conversion~~ | [utility for XML conversion](https://github.com/Ziphil/Zenithal) |
-| ~~utility for book generation~~ | [utility for book generation](https://github.com/Ziphil/ZenithalBook) |
-| ~~utility for slide generation~~ | [utility for slide generation](https://github.com/Ziphil/ZenithalSlide) |
+| ~~utilities and extensions of XML DOM~~ | [utilities and extensions of XML DOM](https://github.com/Ziphil/Zenithal) |
+| ~~utilities for XML conversion~~ | [utilities for XML conversion](https://github.com/Ziphil/Zenithal) |
+| ~~utilities for book generation~~ | [utilities for book generation](https://github.com/Ziphil/ZenithalBook) |
+| ~~utilities for slide generation~~ | [utilities for slide generation](https://github.com/Ziphil/ZenithalSlide) |
