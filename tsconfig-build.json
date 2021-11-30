@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "outDir": "./dist",
+    "rootDir": "./source",
     "baseUrl": "./",
     "module": "commonjs",
     "target": "es5",
@@ -15,7 +16,6 @@
     "removeComments": true
   },
   "include": [
-    "source/**/*",
-    "test/**/*"
+    "source/**/*"
   ]
 }

@@ -1,5 +1,6 @@
 test
 source
+coverage
 .vscode
 tsconfig.json
 tslint.json

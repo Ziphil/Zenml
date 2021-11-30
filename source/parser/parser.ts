@@ -7,11 +7,17 @@ import {
   lazy,
   seq
 } from "parsimmon";
+import "./extension";
 import {
-  DOMImplementation
-} from "xmldom";
+  DOMImplementation,
+  dedentDescendants
+} from "../dom";
 import {
-  mapCatch
+  ZenmlPlugin
+} from "./plugin";
+import {
+  StateParser,
+  create
 } from "./util";
 
 
@@ -54,113 +60,247 @@ const REST_IDENTIFIER_CHAR_RANGES = [
 
 const SPACE_CHAR_STRING = SPACE_CHARS.join("");
 
-type ZenmlMark = keyof typeof MARK_CHARS;
-type ZenmlAttribute = readonly [name: string, value: string];
-type ZenmlAttributes = ReadonlyArray<ZenmlAttribute>;
-type ZenmlTagSpec = readonly [name: string, marks: Array<ZenmlMark>, attributes: ZenmlAttributes, macro: boolean];
+export type ZenmlMark = keyof typeof MARK_CHARS;
+export type ZenmlMarks = ReadonlyArray<ZenmlMark>;
+export type ZenmlSpecialElementKind = keyof typeof SPECIAL_ELEMENT_STARTS;
+export type ZenmlAttribute = readonly [name: string, value: string];
+export type ZenmlAttributes = ReadonlyArray<ZenmlAttribute>;
+export type ZenmlTagSpec = readonly [name: string, marks: ZenmlMarks, attributes: ZenmlAttributes, macro: boolean];
 
-type Nodes = Array<Node>;
+export type Nodes = Array<Node>;
+
+type ZenmlParserState = {
+  verbal?: boolean,
+  inSlash?: boolean,
+  pluginName?: string
+};
+export type ZenmlParserOptions = {
+  specialElementNames?: {brace?: string, bracket?: string, slash?: string}
+};
 
 
-export class BaseZenmlParser {
+export class ZenmlParser {
 
-  private readonly document: Document;
+  public document: Document;
+  private readonly implementation: DOMImplementation;
+  private readonly plugins: Map<string, ZenmlPlugin>;
+  private readonly options: ZenmlParserOptions;
 
-  public constructor() {
+  public constructor(options?: ZenmlParserOptions) {
     let implementation = new DOMImplementation();
-    this.document = implementation.createDocument(null, null, null);
+    let document = implementation.createDocument(null, null, null);
+    this.document = document;
+    this.implementation = implementation;
+    this.plugins = new Map();
+    this.options = options ?? {};
+  }
+
+  public registerPlugin(name: string, plugin: ZenmlPlugin): void {
+    this.plugins.set(name, plugin);
+    plugin.initialize(this);
+  }
+
+  public updateDocument(): void {
+    let document = this.implementation.createDocument(null, null, null);
+    this.document = document;
   }
 
   public tryParse(input: string): Document {
+    this.updateDocument();
     return this.root.tryParse(input);
   }
 
-  protected root: Parser<Document> = lazy(() => {
-    throw new Error("to be implemented");
+  public readonly root: Parser<Document> = lazy(() => {
+    let parser = this.nodes({}).map((nodes) => {
+      let document = this.document;
+      for (let node of nodes) {
+        document.appendChild(node);
+      }
+      return document;
+    });
+    return parser;
   });
 
-  protected nodes: Parser<Nodes> = lazy(() => {
-    throw new Error("to be implemented");
+  public readonly nodes: StateParser<Nodes, ZenmlParserState> = create((state) => {
+    if (state.pluginName !== undefined) {
+      let plugin = this.plugins.get(state.pluginName);
+      if (plugin !== undefined) {
+        let parser = plugin.getParser();
+        return parser;
+      } else {
+        return Parsimmon.fail("No such plugin");
+      }
+    } else if (state.verbal) {
+      let parser = this.verbalText;
+      return parser;
+    } else {
+      let innerParsers = [];
+      innerParsers.push(lazy(() => this.element(state)));
+      innerParsers.push(lazy(() => this.braceElement(state)), lazy(() => this.bracketElement(state)));
+      if (!state.inSlash) {
+        innerParsers.push(lazy(() => this.slashElement(state)));
+      }
+      innerParsers.push(this.comment, this.text);
+      let parser = alt(...innerParsers).many().map((nodesList) => nodesList.flat());
+      return parser;
+    }
   });
 
-  protected element: Parser<Nodes> = lazy(() => {
+  public readonly element: StateParser<Nodes, ZenmlParserState> = create((state) => {
     let parser = seq(
-      this.tag,
-      this.childrenList
-    ).thru(mapCatch(([tagSpec, childrenList]) => {
+      this.tag
+    ).chain(([tagSpec]) => {
       let [name, marks, attributes, macro] = tagSpec;
-      let element = (macro) ? this.processMacro(name, marks, attributes, childrenList) : this.createElement(name, marks, attributes, childrenList);
+      let nextState = this.determineNextState(state, name, marks, attributes, macro);
+      let nextParser = this.childrenList(nextState).map((childrenList) => [tagSpec, childrenList] as const);
+      return nextParser;
+    }).mapCatch(([tagSpec, childrenList]) => {
+      let [name, marks, attributes, macro] = tagSpec;
+      this.modifyChildrenList(name, marks, attributes, macro, childrenList);
+      if (macro) {
+        return this.processMacro(name, marks, attributes, childrenList);
+      } else {
+        return this.createElement(name, marks, attributes, childrenList);
+      }
+    });
+    return parser;
+  });
+
+  private determineNextState(state: ZenmlParserState, name: string, marks: ZenmlMarks, attributes: ZenmlAttributes, macro: boolean): ZenmlParserState {
+    let nextState = {...state, inSlash: false};
+    if (marks.includes("verbal")) {
+      nextState = {...nextState, verbal: true};
+    }
+    if (macro) {
+      nextState = {...nextState, pluginName: name};
+    }
+    return nextState;
+  }
+
+  private modifyChildrenList(name: string, marks: ZenmlMarks, attributes: ZenmlAttributes, macro: boolean, childrenList: Array<Nodes>): void {
+    if (childrenList.length >= 2 && !macro && !marks.includes("multiple")) {
+      throw "Normal element cannot have more than one argument";
+    }
+    if (marks.includes("trim")) {
+      for (let children of childrenList) {
+        dedentDescendants(children);
+      }
+    }
+  }
+
+  private processMacro(name: string, marks: ZenmlMarks, attributes: ZenmlAttributes, childrenList: Array<Nodes>): Nodes {
+    let plugin = this.plugins.get(name);
+    if (plugin !== undefined) {
+      let element = plugin.createElement(name, marks, attributes, childrenList);
       return element;
-    }));
+    } else {
+      throw "No such plugin";
+    }
+  }
+
+  public readonly braceElement: StateParser<Nodes, ZenmlParserState> = create((state) => {
+    let parser = seq(
+      Parsimmon.string(SPECIAL_ELEMENT_STARTS.brace),
+      this.nodes(state),
+      Parsimmon.string(SPECIAL_ELEMENT_ENDS.brace)
+    ).mapCatch(([, children]) => {
+      let element = this.createSpecialElement("brace", children);
+      return element;
+    });
     return parser;
   });
 
-  protected childrenList: Parser<Array<Nodes>> = lazy(() => {
-    let parser = alt(this.emptyChildrenChain, this.childrenChain);
+  public readonly bracketElement: StateParser<Nodes, ZenmlParserState> = create((state) => {
+    let parser = seq(
+      Parsimmon.string(SPECIAL_ELEMENT_STARTS.bracket),
+      this.nodes(state),
+      Parsimmon.string(SPECIAL_ELEMENT_ENDS.bracket)
+    ).mapCatch(([, children]) => {
+      let element = this.createSpecialElement("bracket", children);
+      return element;
+    });
     return parser;
   });
 
-  protected childrenChain: Parser<Array<Nodes>> = lazy(() => {
-    let parser = this.children.atLeast(1);
+  public readonly slashElement: StateParser<Nodes, ZenmlParserState> = create((state) => {
+    let parser = seq(
+      Parsimmon.string(SPECIAL_ELEMENT_STARTS.slash),
+      this.nodes({...state, inSlash: true}),
+      Parsimmon.string(SPECIAL_ELEMENT_ENDS.slash)
+    ).mapCatch(([, children]) => {
+      let element = this.createSpecialElement("slash", children);
+      return element;
+    });
     return parser;
   });
 
-  protected emptyChildrenChain: Parser<Array<Nodes>> = lazy(() => {
+  public readonly childrenList: StateParser<Array<Nodes>, ZenmlParserState> = create((state) => {
+    let parser = alt(this.emptyChildrenChain, this.childrenChain(state));
+    return parser;
+  });
+
+  public readonly childrenChain: StateParser<Array<Nodes>, ZenmlParserState> = create((state) => {
+    let parser = this.children(state).atLeast(1);
+    return parser;
+  });
+
+  public readonly emptyChildrenChain: Parser<Array<Nodes>> = lazy(() => {
     let parser = Parsimmon.string(CONTENT_DELIMITER).result([]);
     return parser;
   });
 
-  protected children: Parser<Array<Node>> = lazy(() => {
+  public readonly children: StateParser<Array<Node>, ZenmlParserState> = create((state) => {
     let parser = seq(
       Parsimmon.string(CONTENT_START),
-      this.nodes,
+      this.nodes(state),
       Parsimmon.string(CONTENT_END)
     ).map(([, children]) => children);
     return parser;
   });
 
-  protected tag: Parser<ZenmlTagSpec> = lazy(() => {
+  public readonly tag: Parser<ZenmlTagSpec> = lazy(() => {
     let parser = seq(
       Parsimmon.oneOf(ELEMENT_START + MACRO_START),
       this.identifier,
       this.marks,
-      this.attributes.times(0, 1).map((result) => result[0])
+      this.attributes.maybe()
     ).map(([startChar, name, marks, attributes]) => {
       let macro = startChar === MACRO_START;
-      return [name, marks, attributes, macro] as const;
+      return [name, marks, attributes ?? [], macro] as const;
     });
     return parser;
   });
 
-  protected marks: Parser<Array<ZenmlMark>> = lazy(() => {
+  public readonly marks: Parser<ZenmlMarks> = lazy(() => {
     let parser = this.mark.many();
     return parser;
   });
 
-  protected mark: Parser<ZenmlMark> = lazy(() => {
+  public readonly mark: Parser<ZenmlMark> = lazy(() => {
     let parsers = Object.entries(MARK_CHARS).map(([mark, char]) => Parsimmon.string(char).result(mark)) as Array<Parser<ZenmlMark>>;
     let parser = alt(...parsers);
     return parser;
   });
 
-  protected attributes: Parser<ZenmlAttributes> = lazy(() => {
+  public readonly attributes: Parser<ZenmlAttributes> = lazy(() => {
     let parser = seq(
       Parsimmon.string(ATTRIBUTE_START),
-      this.attribute.sepBy(seq(this.blank, Parsimmon.string(ATTRIBUTE_SEPARATOR), this.blank))
+      this.attribute.sepBy(seq(this.blank, Parsimmon.string(ATTRIBUTE_SEPARATOR), this.blank)),
+      Parsimmon.string(ATTRIBUTE_END)
     ).map(([, attributes]) => attributes);
     return parser;
   });
 
-  protected attribute: Parser<ZenmlAttribute> = lazy(() => {
+  public readonly attribute: Parser<ZenmlAttribute> = lazy(() => {
     let parser = seq(
       this.identifier,
       this.blank,
-      this.attributeValue.times(0, 1).map((result) => result[0])
+      this.attributeValue.maybe()
     ).map(([name, , value]) => [name, value ?? name] as const);
     return parser;
   });
 
-  protected attributeValue: Parser<string> = lazy(() => {
+  public readonly attributeValue: Parser<string> = lazy(() => {
     let parser = seq(
       Parsimmon.string(ATTRIBUTE_EQUAL),
       this.blank,
@@ -169,26 +309,26 @@ export class BaseZenmlParser {
     return parser;
   });
 
-  protected string: Parser<string> = lazy(() => {
+  public readonly string: Parser<string> = lazy(() => {
     let parser = seq(
       Parsimmon.string(STRING_START),
-      this.innerString,
+      this.stringFragment.many(),
       Parsimmon.string(STRING_END)
-    ).map(([, string]) => string);
+    ).map(([, strings]) => strings.join(""));
     return parser;
   });
 
-  protected innerString: Parser<string> = lazy(() => {
-    let parser = alt(this.stringEscape, this.plainInnerString);
+  public readonly stringFragment: Parser<string> = lazy(() => {
+    let parser = alt(this.stringEscape, this.plainStringFragment);
     return parser;
   });
 
-  protected plainInnerString: Parser<string> = lazy(() => {
-    let parser = Parsimmon.noneOf(STRING_START + STRING_END).atLeast(1).map((chars) => chars.join(""));
+  public readonly plainStringFragment: Parser<string> = lazy(() => {
+    let parser = Parsimmon.noneOf(STRING_START + STRING_END + ESCAPE_START).atLeast(1).map((chars) => chars.join(""));
     return parser;
   });
 
-  protected identifier: Parser<string> = lazy(() => {
+  public readonly identifier: Parser<string> = lazy(() => {
     let parser = seq(
       this.firstIdentifierChar,
       this.restIdentifierChar.many()
@@ -196,7 +336,7 @@ export class BaseZenmlParser {
     return parser;
   });
 
-  protected firstIdentifierChar: Parser<string> = lazy(() => {
+  public readonly firstIdentifierChar: Parser<string> = lazy(() => {
     let parser = Parsimmon.test((char) => {
       let code = char.charCodeAt(0);
       let predicate = FIRST_IDENTIFIER_CHAR_RANGES.some(([start, end]) => code >= start && code <= end);
@@ -205,7 +345,7 @@ export class BaseZenmlParser {
     return parser;
   });
 
-  protected restIdentifierChar: Parser<string> = lazy(() => {
+  public readonly restIdentifierChar: Parser<string> = lazy(() => {
     let parser = Parsimmon.test((char) => {
       let code = char.charCodeAt(0);
       let predicate = REST_IDENTIFIER_CHAR_RANGES.some(([start, end]) => code >= start && code <= end);
@@ -214,32 +354,195 @@ export class BaseZenmlParser {
     return parser;
   });
 
-  protected stringEscape: Parser<string> = lazy(() => {
+  public readonly text: Parser<Nodes> = lazy(() => {
+    let parser = this.textContentFragment.atLeast(1).mapCatch((contents) => this.createText(contents.join("")));
+    return parser;
+  });
+
+  public readonly verbalText: Parser<Nodes> = lazy(() => {
+    let parser = this.verbalTextContentFragment.atLeast(1).mapCatch((contents) => this.createText(contents.join("")));
+    return parser;
+  });
+
+  public readonly textContentFragment: Parser<string> = lazy(() => {
+    let parser = alt(this.textEscape, this.plainTextContentFragment);
+    return parser;
+  });
+
+  public readonly verbalTextContentFragment: Parser<string> = lazy(() => {
+    let parser = alt(this.textEscape, this.plainVerbalTextContentFragment);
+    return parser;
+  });
+
+  public readonly plainTextContentFragment: Parser<string> = lazy(() => {
+    let exclusion = ELEMENT_START + MACRO_START + ESCAPE_START + CONTENT_START + CONTENT_END + CONTENT_DELIMITER + COMMENT_DELIMITER;
+    for (let [, char] of Object.entries(SPECIAL_ELEMENT_STARTS)) {
+      exclusion += char;
+    }
+    for (let [, char] of Object.entries(SPECIAL_ELEMENT_ENDS)) {
+      exclusion += char;
+    }
+    let parser = Parsimmon.noneOf(exclusion).atLeast(1).map((chars) => chars.join(""));
+    return parser;
+  });
+
+  public readonly plainVerbalTextContentFragment: Parser<string> = lazy(() => {
+    let exclusion = ESCAPE_START + CONTENT_END;
+    let parser = Parsimmon.noneOf(exclusion).atLeast(1).map((chars) => chars.join(""));
+    return parser;
+  });
+
+  public readonly stringEscape: Parser<string> = lazy(() => {
     let parser = seq(
       Parsimmon.string(ESCAPE_START),
       Parsimmon.any
-    ).thru(mapCatch(([, char]) => this.createStringEscape(char)));
+    ).mapCatch(([, char]) => this.createStringEscape(char));
     return parser;
   });
 
-  protected blank: Parser<null> = lazy(() => {
-    let parser = Parsimmon.oneOf(SPACE_CHAR_STRING).result(null);
+  public readonly textEscape: Parser<string> = lazy(() => {
+    let parser = seq(
+      Parsimmon.string(ESCAPE_START),
+      Parsimmon.any
+    ).mapCatch(([, char]) => this.createTextEscape(char));
     return parser;
   });
 
-  protected createElement(name: string, marks: Array<ZenmlMark>, attributes: ZenmlAttributes, childrenList: Array<Nodes>): Nodes {
-    throw "to be implemented";
+  public readonly comment: Parser<Nodes> = lazy(() => {
+    let parser = seq(
+      Parsimmon.string(COMMENT_DELIMITER),
+      alt(this.lineComment, this.blockComment)
+    ).map(([, comment]) => comment);
+    return parser;
+  });
+
+  public readonly lineComment: Parser<Nodes> = lazy(() => {
+    let parser = seq(
+      Parsimmon.string(COMMENT_DELIMITER),
+      this.lineCommentContent,
+      alt(Parsimmon.string("\n"), Parsimmon.eof)
+    ).map(([, content]) => this.createLineComment(content));
+    return parser;
+  });
+
+  public readonly blockComment: Parser<Nodes> = lazy(() => {
+    let parser = seq(
+      Parsimmon.string(CONTENT_START),
+      this.blockCommentContent,
+      Parsimmon.string(CONTENT_END)
+    ).map(([, content]) => this.createBlockComment(content));
+    return parser;
+  });
+
+  public readonly lineCommentContent: Parser<string> = lazy(() => {
+    let parser = Parsimmon.noneOf("\n").many().map((chars) => chars.join(""));
+    return parser;
+  });
+
+  public readonly blockCommentContent: Parser<string> = lazy(() => {
+    let parser = Parsimmon.noneOf(CONTENT_END).many().map((chars) => chars.join(""));
+    return parser;
+  });
+
+  public readonly blank: Parser<null> = lazy(() => {
+    let parser = Parsimmon.oneOf(SPACE_CHAR_STRING).many().result(null);
+    return parser;
+  });
+
+  protected createElement(name: string, marks: ZenmlMarks, attributes: ZenmlAttributes, childrenList: Array<Nodes>): Nodes {
+    if (marks.includes("instruction")) {
+      return this.createInstruction(name, marks, attributes, childrenList);
+    } else {
+      return this.createNormalElement(name, marks, attributes, childrenList);
+    }
   }
 
-  protected processMacro(name: string, marks: Array<ZenmlMark>, attributes: ZenmlAttributes, childrenList: Array<Nodes>): Nodes {
-    throw "to be implemented";
+  protected createInstruction(name: string, marks: ZenmlMarks, attributes: ZenmlAttributes, childrenList: Array<Nodes>): Nodes {
+    if (name === SYSTEM_INSTRUCTION_NAME) {
+      if (childrenList.length <= 0) {
+        return [];
+      } else {
+        throw "ZenML declaration cannot have arguments";
+      }
+    } else {
+      if (childrenList.length <= 1) {
+        let children = childrenList[0] ?? [];
+        let contents = [];
+        for (let attribute of attributes) {
+          contents.push(`${attribute[0]}="${attribute[1]}"`);
+        }
+        for (let child of children) {
+          if (child.isText()) {
+            contents.push(child.data);
+          } else {
+            throw "Contents of a processing instruction must be texts";
+          }
+        }
+        let content = contents.join(" ");
+        let instruction = this.document.createProcessingInstruction(name, content);
+        return [instruction];
+      } else {
+        throw "Processing instruction cannot have more than one argument";
+      }
+    }
+  }
+
+  protected createNormalElement(name: string, marks: ZenmlMarks, attributes: ZenmlAttributes, childrenList: Array<Nodes>): Nodes {
+    let nodes = [];
+    if (childrenList.length <= 0) {
+      childrenList = [[]];
+    }
+    for (let children of childrenList) {
+      let element = this.document.createElement(name);
+      for (let attribute of attributes) {
+        element.setAttribute(attribute[0], attribute[1]);
+      }
+      for (let child of children) {
+        element.appendChild(child);
+      }
+      nodes.push(element);
+    }
+    return nodes;
+  }
+
+  protected createSpecialElement(kind: ZenmlSpecialElementKind, children: Nodes): Nodes {
+    let name = this.options.specialElementNames?.[kind];
+    if (name !== undefined) {
+      let nodes = this.createNormalElement(name, [], [], [children]);
+      return nodes;
+    } else {
+      throw `No name specified for ${kind} elements`;
+    }
+  }
+
+  protected createText(content: string): Nodes {
+    let text = this.document.createTextNode(content);
+    return [text];
+  }
+
+  protected createLineComment(content: string): Nodes {
+    let comment = this.document.createComment(content);
+    return [comment];
+  }
+
+  protected createBlockComment(content: string): Nodes {
+    let comment = this.document.createComment(content);
+    return [comment];
   }
 
   protected createStringEscape(char: string): string {
     if (ESCAPE_CHARS.includes(char)) {
       return char;
     } else {
-      throw "invalid escape";
+      throw "Invalid escape";
+    }
+  }
+
+  protected createTextEscape(char: string): string {
+    if (ESCAPE_CHARS.includes(char)) {
+      return char;
+    } else {
+      throw "Invalid escape";
     }
   }
 
