@@ -1,8 +1,9 @@
 //
 
 import {
+  DOMImplementation,
   XMLSerializer
-} from "@zenml/xmldom";
+} from "@xmldom/xmldom";
 import Parsimmon from "parsimmon";
 import {
   Parser
@@ -18,10 +19,11 @@ import {
 } from "../source";
 
 
+let implementation = new DOMImplementation();
 let serializer = new XMLSerializer();
 
 function createParser(options?: ZenmlParserOptions, plugins?: Array<[string, ZenmlPlugin]>): ZenmlParser {
-  let parser = new ZenmlParser(options);
+  let parser = new ZenmlParser(implementation, options);
   if (plugins !== undefined) {
     for (let [name, plugin] of plugins) {
       parser.registerPlugin(name, plugin);

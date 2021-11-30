@@ -20,7 +20,7 @@ Install via [npm](https://www.npmjs.com/package/@zenml/zenml).
 npm i @zenml/zenml
 ```
 
-## List of ZenML/XML infrastructures
+## ZenML/XML infrastructure
 
 | TypeScript impls | Ruby impls |
 |:--:|:--:|

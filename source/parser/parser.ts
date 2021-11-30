@@ -1,9 +1,5 @@
 //
 
-import {
-  DOMImplementation,
-  dedentDescendants
-} from "@zenml/xmldom";
 import Parsimmon from "parsimmon";
 import {
   Parser,
@@ -11,13 +7,18 @@ import {
   lazy,
   seq
 } from "parsimmon";
-import "./extension";
+import {
+  dedentDescendants,
+  isText
+} from "../util/dom";
 import {
   ZenmlPlugin
 } from "./plugin";
 import {
   StateParser,
-  create
+  create,
+  mapCatch,
+  maybe
 } from "./util";
 
 
@@ -75,6 +76,7 @@ type ZenmlParserState = {
   pluginName?: string
 };
 export type ZenmlParserOptions = {
+  document?: Document,
   specialElementNames?: {brace?: string, bracket?: string, slash?: string}
 };
 
@@ -86,9 +88,8 @@ export class ZenmlParser {
   private readonly plugins: Map<string, ZenmlPlugin>;
   private readonly options: ZenmlParserOptions;
 
-  public constructor(options?: ZenmlParserOptions) {
-    let implementation = new DOMImplementation();
-    let document = implementation.createDocument(null, null, null);
+  public constructor(implementation: DOMImplementation, options?: ZenmlParserOptions) {
+    let document = options?.document ?? implementation.createDocument(null, null, null);
     this.document = document;
     this.implementation = implementation;
     this.plugins = new Map();
@@ -101,7 +102,7 @@ export class ZenmlParser {
   }
 
   public updateDocument(): void {
-    let document = this.implementation.createDocument(null, null, null);
+    let document = this.options.document ?? this.implementation.createDocument(null, null, null);
     this.document = document;
   }
 
@@ -154,7 +155,7 @@ export class ZenmlParser {
       let nextState = this.determineNextState(state, name, marks, attributes, macro);
       let nextParser = this.childrenList(nextState).map((childrenList) => [tagSpec, childrenList] as const);
       return nextParser;
-    }).mapCatch(([tagSpec, childrenList]) => {
+    }).thru(mapCatch(([tagSpec, childrenList]) => {
       let [name, marks, attributes, macro] = tagSpec;
       this.modifyChildrenList(name, marks, attributes, macro, childrenList);
       if (macro) {
@@ -162,7 +163,7 @@ export class ZenmlParser {
       } else {
         return this.createElement(name, marks, attributes, childrenList);
       }
-    });
+    }));
     return parser;
   });
 
@@ -203,10 +204,10 @@ export class ZenmlParser {
       Parsimmon.string(SPECIAL_ELEMENT_STARTS.brace),
       this.nodes(state),
       Parsimmon.string(SPECIAL_ELEMENT_ENDS.brace)
-    ).mapCatch(([, children]) => {
+    ).thru(mapCatch(([, children]) => {
       let element = this.createSpecialElement("brace", children);
       return element;
-    });
+    }));
     return parser;
   });
 
@@ -215,10 +216,10 @@ export class ZenmlParser {
       Parsimmon.string(SPECIAL_ELEMENT_STARTS.bracket),
       this.nodes(state),
       Parsimmon.string(SPECIAL_ELEMENT_ENDS.bracket)
-    ).mapCatch(([, children]) => {
+    ).thru(mapCatch(([, children]) => {
       let element = this.createSpecialElement("bracket", children);
       return element;
-    });
+    }));
     return parser;
   });
 
@@ -227,10 +228,10 @@ export class ZenmlParser {
       Parsimmon.string(SPECIAL_ELEMENT_STARTS.slash),
       this.nodes({...state, inSlash: true}),
       Parsimmon.string(SPECIAL_ELEMENT_ENDS.slash)
-    ).mapCatch(([, children]) => {
+    ).thru(mapCatch(([, children]) => {
       let element = this.createSpecialElement("slash", children);
       return element;
-    });
+    }));
     return parser;
   });
 
@@ -263,7 +264,7 @@ export class ZenmlParser {
       Parsimmon.oneOf(ELEMENT_START + MACRO_START),
       this.identifier,
       this.marks,
-      this.attributes.maybe()
+      this.attributes.thru(maybe)
     ).map(([startChar, name, marks, attributes]) => {
       let macro = startChar === MACRO_START;
       return [name, marks, attributes ?? [], macro] as const;
@@ -295,7 +296,7 @@ export class ZenmlParser {
     let parser = seq(
       this.identifier,
       this.blank,
-      this.attributeValue.maybe()
+      this.attributeValue.thru(maybe)
     ).map(([name, , value]) => [name, value ?? name] as const);
     return parser;
   });
@@ -355,12 +356,18 @@ export class ZenmlParser {
   });
 
   public readonly text: Parser<Nodes> = lazy(() => {
-    let parser = this.textContentFragment.atLeast(1).mapCatch((contents) => this.createText(contents.join("")));
+    let parser = this.textContentFragment.atLeast(1).thru(mapCatch((contents) => {
+      let content = contents.join("");
+      return this.createText(content);
+    }));
     return parser;
   });
 
   public readonly verbalText: Parser<Nodes> = lazy(() => {
-    let parser = this.verbalTextContentFragment.atLeast(1).mapCatch((contents) => this.createText(contents.join("")));
+    let parser = this.verbalTextContentFragment.atLeast(1).thru(mapCatch((contents) => {
+      let content = contents.join("");
+      return this.createText(content);
+    }));
     return parser;
   });
 
@@ -396,7 +403,7 @@ export class ZenmlParser {
     let parser = seq(
       Parsimmon.string(ESCAPE_START),
       Parsimmon.any
-    ).mapCatch(([, char]) => this.createStringEscape(char));
+    ).thru(mapCatch(([, char]) => this.createStringEscape(char)));
     return parser;
   });
 
@@ -404,7 +411,7 @@ export class ZenmlParser {
     let parser = seq(
       Parsimmon.string(ESCAPE_START),
       Parsimmon.any
-    ).mapCatch(([, char]) => this.createTextEscape(char));
+    ).thru(mapCatch(([, char]) => this.createTextEscape(char)));
     return parser;
   });
 
@@ -472,7 +479,7 @@ export class ZenmlParser {
           contents.push(`${attribute[0]}="${attribute[1]}"`);
         }
         for (let child of children) {
-          if (child.isText()) {
+          if (isText(child)) {
             contents.push(child.data);
           } else {
             throw "Contents of a processing instruction must be texts";

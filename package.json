@@ -43,6 +43,7 @@
     "@types/parsimmon": "^1.10.6",
     "@typescript-eslint/eslint-plugin": "^5.1.0",
     "@typescript-eslint/parser": "^5.1.0",
+    "@xmldom/xmldom": "^0.7.5",
     "eslint": "^8.0.1",
     "eslint-config-ziphil": "^1.2.0",
     "eslint-plugin-import": "^2.25.2",
@@ -55,7 +56,6 @@
     "typescript": "^4.4.4"
   },
   "dependencies": {
-    "@zenml/xmldom": "^0.0.0",
     "parsimmon": "^1.18.0"
   }
 }
