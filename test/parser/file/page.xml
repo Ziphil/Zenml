@@ -3,9 +3,9 @@
 <html lang="ja">
   <head>
     <meta charset="UTF-8"/>
-    <meta content="width=device-width,initial-scale=0.7" name="viewport"/>
+    <meta name="viewport" content="width=device-width,initial-scale=0.7"/>
     <script src="program/script/12.js"/>
-    <link href="style/8.css" rel="stylesheet" type="text/css"/>
+    <link rel="stylesheet" type="text/css" href="style/8.css"/>
     <title>Avendia</title>
   </head>
   <body>
@@ -23,7 +23,7 @@
         </div>
       </div>
       <div class="card">
-        <a class="item" href="conlang/course/" id="course">
+        <a class="item" id="course" href="conlang/course/">
           <div class="title">
             <div class="japanese">入門書</div>
             <div class="shaleian">sOxaLfÔc</div>
@@ -33,7 +33,7 @@
             書籍として出版もされています。
           </div>
         </a>
-        <a class="item" href="conlang/database/" id="database">
+        <a class="item" id="database" href="conlang/database/">
           <div class="title">
             <div class="japanese">データベース</div>
             <div class="shaleian"/>
@@ -42,7 +42,7 @@
             シャレイア語の辞典を閲覧したり、シャレイア文字のフォントをダウンロードしたりできます。
           </div>
         </a>
-        <a class="item" href="conlang/translation/" id="translation">
+        <a class="item" id="translation" href="conlang/translation/">
           <div class="title">
             <div class="japanese">翻訳</div>
             <div class="shaleian">niSqAl</div>
@@ -52,7 +52,7 @@
             アイドルマスター関連の楽曲の翻訳が多めです。
           </div>
         </a>
-        <a class="item" href="conlang/work/" id="work">
+        <a class="item" id="work" href="conlang/work/">
           <div class="title">
             <div class="japanese">創作</div>
             <div class="shaleian">xAkUc</div>
@@ -61,7 +61,7 @@
             シャレイア語で書かれたオリジナルの文章などを読むことができます。
           </div>
         </a>
-        <a class="item" href="conlang/theory/" id="theory">
+        <a class="item" id="theory" href="conlang/theory/">
           <div class="title">
             <div class="japanese">シャレイア語論</div>
             <div class="shaleian"/>
@@ -70,7 +70,7 @@
             シャレイア語における文法や語法に関する詳細な解説を集めたものです。
           </div>
         </a>
-        <a class="item" href="diary/conlang/" id="diary">
+        <a class="item" id="diary" href="diary/conlang/">
           <div class="title">
             <div class="japanese">制作日記</div>
             <div class="shaleian">rÁtTaQ iLoKe XAkOc</div>
@@ -82,13 +82,13 @@
         </a>
       </div>
       <div class="card simple">
-        <a class="item" href="other/other/2.html" id="biography">
+        <a class="item" id="biography" href="other/other/2.html">
           <div class="title">
             <div class="japanese">管理人紹介</div>
             <div class="shaleian"/>
           </div>
         </a>
-        <a class="item" href="conlang/document/16.html" id="project">
+        <a class="item" id="project" href="conlang/document/16.html">
           <div class="title">
             <div class="japanese">シャレイア語とは</div>
             <div class="shaleian"/>

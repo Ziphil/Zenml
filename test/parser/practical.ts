@@ -22,5 +22,6 @@ describe("practical examples", () => {
     shouldEquivalentFile("diary", options);
   });
   test("page", () => {
+    shouldEquivalentFile("page");
   });
 });
