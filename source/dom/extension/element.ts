@@ -1,6 +1,6 @@
 //
 
-import "./constructor";
+import "../constructor";
 
 
 function getDescendantTexts(this: Element): Array<Text> {
