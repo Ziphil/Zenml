@@ -1,5 +1,5 @@
 {
-  "name": "zenml",
+  "name": "@zenml/zenml",
   "version": "0.0.0",
   "author": "Ziphil",
   "description": "Alternative syntax for XML",
