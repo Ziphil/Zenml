@@ -7,7 +7,7 @@ import {
 import {
   Nodes,
   ZenmlAttributes,
-  ZenmlMark,
+  ZenmlMarks,
   ZenmlParser,
   ZenmlParserOptions,
   ZenmlPlugin
@@ -273,7 +273,7 @@ export class TestZenmlPlugin implements ZenmlPlugin {
     return parser;
   }
 
-  public createElement(name: string, marks: Array<ZenmlMark>, attributes: ZenmlAttributes, childrenList: Array<Nodes>): Nodes {
+  public createElement(name: string, marks: ZenmlMarks, attributes: ZenmlAttributes, childrenList: Array<Nodes>): Nodes {
     let element = this.document.createElement(name);
     let children = childrenList[0] ?? [];
     for (let attribute of attributes) {

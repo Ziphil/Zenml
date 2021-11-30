@@ -6,7 +6,7 @@ import {
 import type {
   Nodes,
   ZenmlAttributes,
-  ZenmlMark,
+  ZenmlMarks,
   ZenmlParser
 } from "./parser";
 
@@ -20,6 +20,6 @@ export interface ZenmlPlugin {
   // ZenML ドキュメントのパース処理中でマクロに出会う度に呼び出されます。
   getParser(): Parser<Nodes>;
 
-  createElement(name: string, marks: Array<ZenmlMark>, attributes: ZenmlAttributes, childrenList: Array<Nodes>): Nodes;
+  createElement(name: string, marks: ZenmlMarks, attributes: ZenmlAttributes, childrenList: Array<Nodes>): Nodes;
 
 }
