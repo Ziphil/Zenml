@@ -11,6 +11,7 @@ import {
 import $ from "ts-dedent";
 import {
   Nodes,
+  SimpleZenmlPlugin,
   ZenmlAttributes,
   ZenmlMarks,
   ZenmlParser,
@@ -146,11 +147,29 @@ describe("marks", () => {
 });
 
 describe("macros and plugins", () => {
-  test("simple", () => {
+  test("test plugin", () => {
     let plugin = new TestZenmlPlugin();
     shouldEquivalent(`&macro<42>`, `<macro><digits>42</digits></macro>`, {}, [["macro", plugin]]);
     shouldEquivalent(`&macro<100><200>`, `<macro><digits>100</digits></macro>`, {}, [["macro", plugin]]);
     shouldFail(`&macro<nondigits>`, {}, [["macro", plugin]]);
+  });
+  test("simple plugin", () => {
+    let plugin = new SimpleZenmlPlugin((document, name, marks, attributes, childrenList) => {
+      let element = document.createElement("tr");
+      for (let attribute of attributes) {
+        element.setAttribute(attribute[0], attribute[1]);
+      }
+      for (let children of childrenList) {
+        let innerElement = document.createElement("td");
+        for (let child of children) {
+          innerElement.appendChild(child);
+        }
+        element.appendChild(innerElement);
+      }
+      return [element];
+    });
+    shouldEquivalent(`&tr<one><two><three>`, `<tr><td>one</td><td>two</td><td>three</td></tr>`, {}, [["tr", plugin]]);
+    shouldEquivalent(`&tr<one\\elem<inner>><two\\elem;>`, `<tr><td>one<elem>inner</elem></td><td>two<elem/></td></tr>`, {}, [["tr", plugin]]);
   });
   test("unregistered plugins", () => {
     let plugin = new TestZenmlPlugin();

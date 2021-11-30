@@ -23,3 +23,29 @@ export interface ZenmlPlugin {
   createElement(name: string, marks: ZenmlMarks, attributes: ZenmlAttributes, childrenList: Array<Nodes>): Nodes;
 
 }
+
+
+export class SimpleZenmlPlugin {
+
+  private zenmlParser!: ZenmlParser;
+  private document!: Document;
+  private innerCreateElement: (document: Document, name: string, marks: ZenmlMarks, attributes: ZenmlAttributes, childrenList: Array<Nodes>) => Nodes;
+
+  public constructor(innerCreateElement: (document: Document, name: string, marks: ZenmlMarks, attributes: ZenmlAttributes, childrenList: Array<Nodes>) => Nodes) {
+    this.innerCreateElement = innerCreateElement;
+  }
+
+  public initialize(zenmlParser: ZenmlParser): void {
+    this.zenmlParser = zenmlParser;
+    this.document = zenmlParser.document;
+  }
+
+  public getParser(): Parser<Nodes> {
+    return this.zenmlParser.nodes({});
+  }
+
+  public createElement(name: string, marks: ZenmlMarks, attributes: ZenmlAttributes, childrenList: Array<Nodes>): Nodes {
+    return this.innerCreateElement(this.document, name, marks, attributes, childrenList);
+  }
+
+}
