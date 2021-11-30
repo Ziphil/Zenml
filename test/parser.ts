@@ -1,8 +1,16 @@
 //
 
+import Parsimmon from "parsimmon";
 import {
+  Parser
+} from "parsimmon";
+import {
+  Nodes,
+  ZenmlAttributes,
+  ZenmlMark,
   ZenmlParser,
-  ZenmlParserOptions
+  ZenmlParserOptions,
+  ZenmlPlugin
 } from "../source";
 import {
   XMLSerializer
@@ -14,13 +22,23 @@ import {
 
 let serializer = new XMLSerializer();
 
-function shouldEquivalent(input: string, output: string, options?: ZenmlParserOptions): void {
+function createParser(options?: ZenmlParserOptions, plugins?: Array<[string, ZenmlPlugin]>): ZenmlParser {
   let parser = new ZenmlParser(options);
+  if (plugins !== undefined) {
+    for (let [name, plugin] of plugins) {
+      parser.registerPlugin(name, plugin);
+    }
+  }
+  return parser;
+}
+
+function shouldEquivalent(input: string, output: string, options?: ZenmlParserOptions, plugins?: Array<[string, ZenmlPlugin]>): void {
+  let parser = createParser(options, plugins);
   expect(serializer.serializeToString(parser.tryParse(input))).toBe(output);
 }
 
-function shouldFail(input: string, options?: ZenmlParserOptions): void {
-  let parser = new ZenmlParser(options);
+function shouldFail(input: string, options?: ZenmlParserOptions, plugins?: Array<[string, ZenmlPlugin]>): void {
+  let parser = createParser(options, plugins);
   expect(() => parser.tryParse(input)).toThrow();
 }
 
@@ -123,6 +141,19 @@ describe("marks", () => {
   });
 });
 
+describe("macros and plugins", () => {
+  test("simple", () => {
+    let plugin = new TestZenmlPlugin();
+    shouldEquivalent(`&macro<42>`, `<macro><digits>42</digits></macro>`, {}, [["macro", plugin]]);
+    shouldEquivalent(`&macro<100><200>`, `<macro><digits>100</digits></macro>`, {}, [["macro", plugin]]);
+    shouldFail(`&macro<nondigits>`, {}, [["macro", plugin]]);
+  });
+  test("unregistered plugins", () => {
+    let plugin = new TestZenmlPlugin();
+    shouldFail(`&unregistered<42>`, {}, [["macro", plugin]]);
+  });
+});
+
 describe("processing instructions", () => {
   test("zenml declaration", () => {
     shouldEquivalent(`\\zml?|version="1.1"|;`, ``);
@@ -222,3 +253,36 @@ describe("escapes", () => {
     shouldFail("\\foo|attr=\"`s\"");
   });
 });
+
+
+export class TestZenmlPlugin implements ZenmlPlugin {
+
+  private document!: Document;
+
+  public initialize(zenmlParser: ZenmlParser): void {
+    this.document = zenmlParser.document;
+  }
+
+  public getParser(): Parser<Nodes> {
+    let parser = Parsimmon.digits.map((string) => {
+      let element = this.document.createElement("digits");
+      let text = this.document.createTextNode(string);
+      element.appendChild(text);
+      return [element];
+    });
+    return parser;
+  }
+
+  public createElement(name: string, marks: Array<ZenmlMark>, attributes: ZenmlAttributes, childrenList: Array<Nodes>): Nodes {
+    let element = this.document.createElement(name);
+    let children = childrenList[0] ?? [];
+    for (let attribute of attributes) {
+      element.setAttribute(attribute[0], attribute[1]);
+    }
+    for (let child of children) {
+      element.appendChild(child);
+    }
+    return [element];
+  }
+
+}
