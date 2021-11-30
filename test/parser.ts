@@ -60,6 +60,10 @@ describe("elements and texts", () => {
     shouldEquivalent(`\\element;`, `<element/>`);
     shouldEquivalent(`\\element|attr="value"|;`, `<element attr="value"/>`);
   });
+  test("more than one arguments", () => {
+    shouldFail(`\\element<one><two><three>`);
+    shouldFail(`\\element|attr="value"|<one><two>`);
+  });
   test("complex", () => {
     shouldEquivalent(`\\nest<text\\nest<inner>text>`, `<nest>text<nest>inner</nest>text</nest>`);
     shouldEquivalent($`
