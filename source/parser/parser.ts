@@ -13,6 +13,9 @@ import {
   dedentDescendants
 } from "../dom";
 import {
+  ZenmlPlugin
+} from "./plugin";
+import {
   StateParser,
   create
 } from "./util";
@@ -57,36 +60,52 @@ const REST_IDENTIFIER_CHAR_RANGES = [
 
 const SPACE_CHAR_STRING = SPACE_CHARS.join("");
 
-type ZenmlMark = keyof typeof MARK_CHARS;
-type ZenmlSpecialElementKind = keyof typeof SPECIAL_ELEMENT_STARTS;
-type ZenmlAttribute = readonly [name: string, value: string];
-type ZenmlAttributes = ReadonlyArray<ZenmlAttribute>;
-type ZenmlTagSpec = readonly [name: string, marks: Array<ZenmlMark>, attributes: ZenmlAttributes, macro: boolean];
+export type ZenmlMark = keyof typeof MARK_CHARS;
+export type ZenmlSpecialElementKind = keyof typeof SPECIAL_ELEMENT_STARTS;
+export type ZenmlAttribute = readonly [name: string, value: string];
+export type ZenmlAttributes = ReadonlyArray<ZenmlAttribute>;
+export type ZenmlTagSpec = readonly [name: string, marks: Array<ZenmlMark>, attributes: ZenmlAttributes, macro: boolean];
 
 export type Nodes = Array<Node>;
 
 type ZenmlParserState = {
   verbal?: boolean,
-  inSlash?: boolean
+  inSlash?: boolean,
+  pluginName?: string
 };
 export type ZenmlParserOptions = {
-  document?: Document,
   specialElementNames?: {brace?: string, bracket?: string, slash?: string}
 };
 
 
 export class ZenmlParser {
 
-  private readonly document: Document;
+  public document: Document;
+  private readonly implementation: DOMImplementation;
+  private readonly plugins: Map<string, ZenmlPlugin>;
   private readonly options: ZenmlParserOptions;
 
   public constructor(options?: ZenmlParserOptions) {
     let implementation = new DOMImplementation();
-    this.document = options?.document ?? implementation.createDocument(null, null, null);
+    let document = implementation.createDocument(null, null, null);
+    this.document = document;
+    this.implementation = implementation;
+    this.plugins = new Map();
     this.options = options ?? {};
   }
 
+  public registerPlugin(name: string, plugin: ZenmlPlugin): void {
+    this.plugins.set(name, plugin);
+    plugin.inheritZenmlParser(this);
+  }
+
+  public updateDocument(): void {
+    let document = this.implementation.createDocument(null, null, null);
+    this.document = document;
+  }
+
   public tryParse(input: string): Document {
+    this.updateDocument();
     return this.root.tryParse(input);
   }
 
@@ -102,7 +121,15 @@ export class ZenmlParser {
   });
 
   protected nodes: StateParser<Nodes, ZenmlParserState> = create((state) => {
-    if (state.verbal) {
+    if (state.pluginName !== undefined) {
+      let plugin = this.plugins.get(state.pluginName);
+      if (plugin !== undefined) {
+        let parser = plugin.getParser();
+        return parser;
+      } else {
+        return Parsimmon.fail("No such plugin");
+      }
+    } else if (state.verbal) {
       let parser = this.verbalText;
       return parser;
     } else {
@@ -127,13 +154,25 @@ export class ZenmlParser {
       if (marks.includes("verbal")) {
         nextState = {...nextState, verbal: true};
       }
+      if (macro) {
+        nextState = {...nextState, pluginName: name};
+      }
       let nextParser = this.childrenList(nextState).map((childrenList) => [tagSpec, childrenList] as const);
       return nextParser;
-    }).map(([tagSpec, childrenList]) => {
+    }).mapCatch(([tagSpec, childrenList]) => {
       let [name, marks, attributes, macro] = tagSpec;
       if (marks.includes("trim")) {
         for (let children of childrenList) {
           dedentDescendants(children);
+        }
+      }
+      if (macro) {
+        let plugin = this.plugins.get(name);
+        if (plugin !== undefined) {
+          let element = plugin.createElement(marks, attributes, childrenList);
+          return element;
+        } else {
+          throw "No such plugin";
         }
       }
       let element = this.createElement(name, marks, attributes, childrenList);
