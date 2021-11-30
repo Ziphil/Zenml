@@ -4,6 +4,7 @@ import Parsimmon from "parsimmon";
 import {
   Parser
 } from "parsimmon";
+import $ from "ts-dedent";
 import {
   Nodes,
   ZenmlAttributes,
@@ -15,9 +16,6 @@ import {
 import {
   XMLSerializer
 } from "../source/dom";
-import {
-  dedent as $
-} from "./util";
 
 
 let serializer = new XMLSerializer();
