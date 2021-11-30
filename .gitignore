@@ -1,6 +1,5 @@
 node_modules
 dist
-file
 coverage
 *.code-workspace
 *.env
