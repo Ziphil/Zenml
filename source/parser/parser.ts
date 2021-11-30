@@ -96,7 +96,7 @@ export class ZenmlParser {
 
   public registerPlugin(name: string, plugin: ZenmlPlugin): void {
     this.plugins.set(name, plugin);
-    plugin.inheritZenmlParser(this);
+    plugin.initialize(this);
   }
 
   public updateDocument(): void {
@@ -169,7 +169,7 @@ export class ZenmlParser {
       if (macro) {
         let plugin = this.plugins.get(name);
         if (plugin !== undefined) {
-          let element = plugin.createElement(marks, attributes, childrenList);
+          let element = plugin.createElement(name, marks, attributes, childrenList);
           return element;
         } else {
           throw "No such plugin";

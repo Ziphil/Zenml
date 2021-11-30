@@ -11,18 +11,15 @@ import type {
 } from "./parser";
 
 
-export abstract class ZenmlPlugin {
+export interface ZenmlPlugin {
 
-  protected zenmlParser!: ZenmlParser;
-  protected document!: Document;
+  // このプラグインを ZenML パーサーに登録したときに一度だけ呼び出されます。
+  initialize(zenmlParser: ZenmlParser): void;
 
-  public abstract getParser(): Parser<Nodes>;
+  // マクロの引数をパースするパーサーを返します。
+  // ZenML ドキュメントのパース処理中でマクロに出会う度に呼び出されます。
+  getParser(): Parser<Nodes>;
 
-  public abstract createElement(marks: Array<ZenmlMark>, attributes: ZenmlAttributes, childrenList: Array<Nodes>): Nodes;
-
-  public inheritZenmlParser(zenmlParser: ZenmlParser): void {
-    this.zenmlParser = zenmlParser;
-    this.document = zenmlParser.document;
-  }
+  createElement(name: string, marks: Array<ZenmlMark>, attributes: ZenmlAttributes, childrenList: Array<Nodes>): Nodes;
 
 }
