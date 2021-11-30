@@ -8,11 +8,11 @@
   "main": "dist/index.js",
   "scripts": {
     "develop": "ts-node source/index.ts",
-    "build": "tsc",
+    "build": "tsc --project tsconfig-build.json",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "prepare": "tsc"
+    "prepare": "tsc --project tsconfig-build.json"
   },
   "eslintConfig": {
     "extends": "ziphil",
