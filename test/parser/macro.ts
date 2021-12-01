@@ -39,8 +39,8 @@ class TestZenmlPlugin implements ZenmlPlugin {
   public createElement(name: string, marks: ZenmlMarks, attributes: ZenmlAttributes, childrenList: Array<Nodes>): Nodes {
     let element = this.document.createElement(name);
     let children = childrenList[0] ?? [];
-    for (let attribute of attributes) {
-      element.setAttribute(attribute[0], attribute[1]);
+    for (let [attributeName, attributeValue] of attributes) {
+      element.setAttribute(attributeName, attributeValue);
     }
     for (let child of children) {
       element.appendChild(child);
@@ -61,8 +61,8 @@ describe("macros and plugins", () => {
   test("simple plugin", () => {
     let plugin = new SimpleZenmlPlugin((document, name, marks, attributes, childrenList) => {
       let element = document.createElement("tr");
-      for (let attribute of attributes) {
-        element.setAttribute(attribute[0], attribute[1]);
+      for (let [attributeName, attributeValue] of attributes) {
+        element.setAttribute(attributeName, attributeValue);
       }
       for (let children of childrenList) {
         let innerElement = document.createElement("td");

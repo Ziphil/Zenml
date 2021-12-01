@@ -65,7 +65,7 @@ export type ZenmlMark = keyof typeof MARK_CHARS;
 export type ZenmlMarks = ReadonlyArray<ZenmlMark>;
 export type ZenmlSpecialElementKind = keyof typeof SPECIAL_ELEMENT_STARTS;
 export type ZenmlAttribute = readonly [name: string, value: string];
-export type ZenmlAttributes = ReadonlyArray<ZenmlAttribute>;
+export type ZenmlAttributes = Map<string, string>;
 export type ZenmlTagSpec = readonly [name: string, marks: ZenmlMarks, attributes: ZenmlAttributes, macro: boolean];
 
 export type Nodes = Array<Node>;
@@ -277,9 +277,10 @@ export class ZenmlParser {
       this.identifier,
       this.marks,
       this.attributes.thru(maybe)
-    ).map(([startChar, name, marks, attributes]) => {
+    ).map(([startChar, name, marks, rawAttributes]) => {
       let macro = startChar === MACRO_START;
-      return [name, marks, attributes ?? [], macro] as const;
+      let attributes = rawAttributes ?? new Map();
+      return [name, marks, attributes, macro] as const;
     });
     return parser;
   });
@@ -300,7 +301,13 @@ export class ZenmlParser {
       Parsimmon.string(ATTRIBUTE_START),
       this.attribute.sepBy(seq(this.blank, Parsimmon.string(ATTRIBUTE_SEPARATOR), this.blank)),
       Parsimmon.string(ATTRIBUTE_END)
-    ).map(([, attributes]) => attributes);
+    ).map(([, rawAttributes]) => {
+      let attributes = new Map<string, string>();
+      for (let [name, value] of rawAttributes) {
+        attributes.set(name, value);
+      }
+      return attributes;
+    });
     return parser;
   });
 
@@ -309,7 +316,10 @@ export class ZenmlParser {
       this.identifier,
       this.blank,
       this.attributeValue.thru(maybe)
-    ).map(([name, , value]) => [name, value ?? name] as const);
+    ).map(([name, , rawValue]) => {
+      let value = rawValue ?? name;
+      return [name, value] as const;
+    });
     return parser;
   });
 
@@ -487,8 +497,8 @@ export class ZenmlParser {
       if (childrenList.length <= 1) {
         let children = childrenList[0] ?? [];
         let contents = [];
-        for (let attribute of attributes) {
-          contents.push(`${attribute[0]}="${attribute[1]}"`);
+        for (let [attributeName, attributeValue] of attributes) {
+          contents.push(`${attributeName}="${attributeValue}"`);
         }
         for (let child of children) {
           if (isText(child)) {
@@ -513,8 +523,8 @@ export class ZenmlParser {
     }
     for (let children of childrenList) {
       let element = this.document.createElement(name);
-      for (let attribute of attributes) {
-        element.setAttribute(attribute[0], attribute[1]);
+      for (let [attributeName, attributeValue] of attributes) {
+        element.setAttribute(attributeName, attributeValue);
       }
       for (let child of children) {
         element.appendChild(child);
@@ -527,7 +537,7 @@ export class ZenmlParser {
   protected createSpecialElement(kind: ZenmlSpecialElementKind, children: Nodes): Nodes {
     let name = this.options.specialElementNames?.[kind];
     if (name !== undefined) {
-      let nodes = this.createNormalElement(name, [], [], [children]);
+      let nodes = this.createNormalElement(name, [], new Map(), [children]);
       return nodes;
     } else {
       throw `No name specified for ${kind} elements`;
