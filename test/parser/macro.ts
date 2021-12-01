@@ -5,6 +5,7 @@ import {
   Parser
 } from "parsimmon";
 import {
+  ChildrenArgs,
   Nodes,
   SimpleZenmlPlugin,
   ZenmlAttributes,
@@ -36,9 +37,9 @@ class TestZenmlPlugin implements ZenmlPlugin {
     return parser;
   }
 
-  public createElement(tagName: string, marks: ZenmlMarks, attributes: ZenmlAttributes, childrenList: Array<Nodes>): Nodes {
+  public createElement(tagName: string, marks: ZenmlMarks, attributes: ZenmlAttributes, childrenArgs: ChildrenArgs): Nodes {
     let element = this.document.createElement(tagName);
-    let children = childrenList[0] ?? [];
+    let children = childrenArgs[0] ?? [];
     for (let [attributeName, attributeValue] of attributes) {
       element.setAttribute(attributeName, attributeValue);
     }
@@ -59,12 +60,12 @@ describe("macros and plugins", () => {
     shouldFail(`&macro<nondigits>`, {}, [["macro", plugin]]);
   });
   test("simple plugin", () => {
-    let plugin = new SimpleZenmlPlugin((document, tagName, marks, attributes, childrenList) => {
+    let plugin = new SimpleZenmlPlugin((document, tagName, marks, attributes, childrenArgs) => {
       let element = document.createElement("tr");
       for (let [attributeName, attributeValue] of attributes) {
         element.setAttribute(attributeName, attributeValue);
       }
-      for (let children of childrenList) {
+      for (let children of childrenArgs) {
         let innerElement = document.createElement("td");
         for (let child of children) {
           innerElement.appendChild(child);

@@ -4,6 +4,7 @@ import {
   Parser
 } from "parsimmon";
 import type {
+  ChildrenArgs,
   Nodes,
   ZenmlAttributes,
   ZenmlMarks,
@@ -20,7 +21,7 @@ export interface ZenmlPlugin {
   // ZenML ドキュメントのパース処理中でマクロに出会う度に呼び出されます。
   getParser(): Parser<Nodes>;
 
-  createElement(tagName: string, marks: ZenmlMarks, attributes: ZenmlAttributes, childrenList: Array<Nodes>): Nodes;
+  createElement(tagName: string, marks: ZenmlMarks, attributes: ZenmlAttributes, childrenArgs: ChildrenArgs): Nodes;
 
 }
 
@@ -29,9 +30,9 @@ export class SimpleZenmlPlugin {
 
   private zenmlParser!: ZenmlParser;
   private document!: Document;
-  private innerCreateElement: (document: Document, tagName: string, marks: ZenmlMarks, attributes: ZenmlAttributes, childrenList: Array<Nodes>) => Nodes;
+  private innerCreateElement: (document: Document, tagName: string, marks: ZenmlMarks, attributes: ZenmlAttributes, childrenArgs: ChildrenArgs) => Nodes;
 
-  public constructor(innerCreateElement: (document: Document, tagName: string, marks: ZenmlMarks, attributes: ZenmlAttributes, childrenList: Array<Nodes>) => Nodes) {
+  public constructor(innerCreateElement: (document: Document, tagName: string, marks: ZenmlMarks, attributes: ZenmlAttributes, childrenArgs: ChildrenArgs) => Nodes) {
     this.innerCreateElement = innerCreateElement;
   }
 
@@ -44,8 +45,8 @@ export class SimpleZenmlPlugin {
     return this.zenmlParser.nodes({});
   }
 
-  public createElement(tagName: string, marks: ZenmlMarks, attributes: ZenmlAttributes, childrenList: Array<Nodes>): Nodes {
-    return this.innerCreateElement(this.document, tagName, marks, attributes, childrenList);
+  public createElement(tagName: string, marks: ZenmlMarks, attributes: ZenmlAttributes, childrenArgs: ChildrenArgs): Nodes {
+    return this.innerCreateElement(this.document, tagName, marks, attributes, childrenArgs);
   }
 
 }
