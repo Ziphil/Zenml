@@ -1,5 +1,4 @@
 //
-//
 
 import {
   CreatableDocument
@@ -9,7 +8,7 @@ import {
 export class Fragment<D extends CreatableDocument<E, T>, E, T> {
 
   private document: D;
-  private nodes: Array<E | T>;
+  public nodes: Array<E | T>;
 
   public constructor(document: D) {
     this.document = document;
@@ -17,7 +16,7 @@ export class Fragment<D extends CreatableDocument<E, T>, E, T> {
   }
 
   public appendChild<N extends NodeLike<D, E, T>>(node: N, callback?: NodeCallback<N>): N {
-    callback?.(node);
+    callback?.call(this, node);
     if (node instanceof Fragment) {
       this.nodes.push(...node.nodes);
     } else {

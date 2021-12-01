@@ -41,6 +41,7 @@
   "devDependencies": {
     "@types/jest": "^27.0.2",
     "@types/parsimmon": "^1.10.6",
+    "@types/xml-escape": "^1.1.0",
     "@typescript-eslint/eslint-plugin": "^5.1.0",
     "@typescript-eslint/parser": "^5.1.0",
     "@xmldom/xmldom": "^0.7.5",
@@ -56,6 +57,7 @@
     "typescript": "^4.4.4"
   },
   "dependencies": {
-    "parsimmon": "^1.18.0"
+    "parsimmon": "^1.18.0",
+    "xml-escape": "^1.1.0"
   }
 }

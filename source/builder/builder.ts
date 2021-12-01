@@ -13,21 +13,21 @@ export abstract class DocumentBuilder<D extends CreatableDocument<E, T>, E, T> {
 
   protected document!: D;
 
-  protected buildDocument(name: string, callback?: NodeCallback<D>): D {
-    let self = this.createDocument(name);
+  protected buildDocument(rootTagName: string, callback?: NodeCallback<D>): D {
+    let self = this.createDocument(rootTagName);
     this.document = self;
     callback?.call(this, self);
     return self;
   }
 
-  protected abstract createDocument(name: string): D;
+  protected abstract createDocument(rootTagName: string): D;
 
   protected createFragment(): Fragment<D, E, T> {
     return new Fragment(this.document);
   }
 
-  protected createElement(name: string): E {
-    return this.document.createElement(name);
+  protected createElement(tagName: string): E {
+    return this.document.createElement(tagName);
   }
 
   protected createTextNode(content: string): T {
