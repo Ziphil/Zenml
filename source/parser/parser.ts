@@ -64,9 +64,9 @@ const SPACE_CHAR_STRING = SPACE_CHARS.join("");
 export type ZenmlMark = keyof typeof MARK_CHARS;
 export type ZenmlMarks = ReadonlyArray<ZenmlMark>;
 export type ZenmlSpecialElementKind = keyof typeof SPECIAL_ELEMENT_STARTS;
-export type ZenmlAttribute = readonly [name: string, value: string];
+export type ZenmlAttribute = {name: string, value: string};
 export type ZenmlAttributes = Map<string, string>;
-export type ZenmlTagSpec = readonly [tagName: string, marks: ZenmlMarks, attributes: ZenmlAttributes, macro: boolean];
+export type ZenmlTagSpec = {tagName: string, marks: ZenmlMarks, attributes: ZenmlAttributes, macro: boolean};
 
 export type Nodes = Array<Node>;
 export type ChildrenArgs = Array<Nodes>;
@@ -152,12 +152,12 @@ export class ZenmlParser {
     let parser = seq(
       this.tag
     ).chain(([tagSpec]) => {
-      let [tagName, marks, attributes, macro] = tagSpec;
+      let {tagName, marks, attributes, macro} = tagSpec;
       let nextState = this.determineNextState(state, tagName, marks, attributes, macro);
-      let nextParser = this.determineNextParser(nextState, tagName, marks, attributes, macro);
+      let nextParser = this.determineNextParser(nextState, tagName, marks, attributes, macro).map((childrenArgs) => ({tagSpec, childrenArgs}));
       return nextParser;
-    }).thru(mapCatch(([tagSpec, childrenArgs]) => {
-      let [tagName, marks, attributes, macro] = tagSpec;
+    }).thru(mapCatch(({tagSpec, childrenArgs}) => {
+      let {tagName, marks, attributes, macro} = tagSpec;
       this.modifyChildrenArgs(tagName, marks, attributes, macro, childrenArgs);
       if (macro) {
         return this.processMacro(tagName, marks, attributes, childrenArgs);
@@ -179,15 +179,11 @@ export class ZenmlParser {
     return nextState;
   }
 
-  private determineNextParser(nextState: ZenmlParserState, tagName: string, marks: ZenmlMarks, attributes: ZenmlAttributes, macro: boolean): Parser<readonly [ZenmlTagSpec, ChildrenArgs]> {
+  private determineNextParser(nextState: ZenmlParserState, tagName: string, marks: ZenmlMarks, attributes: ZenmlAttributes, macro: boolean): Parser<ChildrenArgs> {
     let nextParser = seq(
       this.childrenArgs(nextState),
       (tagName === SYSTEM_INSTRUCTION_NAME && marks.includes("instruction")) ? this.blank : Parsimmon.succeed(null)
-    ).map(([childrenArgs]) => {
-      let tagSpec = [tagName, marks, attributes, macro] as const;
-      let result = [tagSpec, childrenArgs] as const;
-      return result;
-    });
+    ).map(([childrenArgs]) => childrenArgs);
     return nextParser;
   }
 
@@ -281,7 +277,7 @@ export class ZenmlParser {
     ).map(([startChar, tagName, marks, rawAttributes]) => {
       let macro = startChar === MACRO_START;
       let attributes = rawAttributes ?? new Map();
-      return [tagName, marks, attributes, macro] as const;
+      return {tagName, marks, attributes, macro};
     });
     return parser;
   });
@@ -304,7 +300,7 @@ export class ZenmlParser {
       Parsimmon.string(ATTRIBUTE_END)
     ).map(([, rawAttributes]) => {
       let attributes = new Map<string, string>();
-      for (let [name, value] of rawAttributes) {
+      for (let {name, value} of rawAttributes) {
         attributes.set(name, value);
       }
       return attributes;
@@ -319,7 +315,7 @@ export class ZenmlParser {
       this.attributeValue.thru(maybe)
     ).map(([name, , rawValue]) => {
       let value = rawValue ?? name;
-      return [name, value] as const;
+      return {name, value};
     });
     return parser;
   });
