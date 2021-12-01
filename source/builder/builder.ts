@@ -1,5 +1,13 @@
 //
 
+import {
+  CreatableDocument
+} from "./document";
+import {
+  Fragment,
+  NodeCallback
+} from "./fragment";
+
 
 export abstract class DocumentBuilder<D extends CreatableDocument<E, T>, E, T> {
 
@@ -14,6 +22,10 @@ export abstract class DocumentBuilder<D extends CreatableDocument<E, T>, E, T> {
 
   protected abstract createDocument(name: string): D;
 
+  protected createFragment(): Fragment<D, E, T> {
+    return new Fragment(this.document);
+  }
+
   protected createElement(name: string): E {
     return this.document.createElement(name);
   }
@@ -23,15 +35,3 @@ export abstract class DocumentBuilder<D extends CreatableDocument<E, T>, E, T> {
   }
 
 }
-
-
-export interface CreatableDocument<E, T> {
-
-  createElement(name: string): E;
-
-  createTextNode(content: string): T;
-
-}
-
-
-export type NodeCallback<N> = (node: N) => void;
