@@ -1,13 +1,15 @@
 //
 
 import {
-  CreatableDocument
-} from "./document";
+  DocumentLike,
+  NodeCallback,
+  NodeLike
+} from "./type";
 
 
-export class Fragment<D extends CreatableDocument<E, T>, E, T> {
+export class Fragment<D extends DocumentLike<E, T>, E, T> {
 
-  private document: D;
+  protected document: D;
   public nodes: Array<E | T>;
 
   public constructor(document: D) {
@@ -39,7 +41,3 @@ export class Fragment<D extends CreatableDocument<E, T>, E, T> {
   }
 
 }
-
-
-export type NodeCallback<N> = (node: N) => void;
-export type NodeLike<D extends CreatableDocument<E, T>, E, T> = Fragment<D, E, T> | E | T;

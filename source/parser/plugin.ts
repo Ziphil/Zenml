@@ -3,6 +3,9 @@
 import {
   Parser
 } from "parsimmon";
+import {
+  DocumentBuilder
+} from "../builder/builder";
 import type {
   ChildrenArgs,
   Nodes,
@@ -29,16 +32,16 @@ export interface ZenmlPlugin {
 export class SimpleZenmlPlugin {
 
   private zenmlParser!: ZenmlParser;
-  private document!: Document;
-  private innerCreateElement: (document: Document, tagName: string, marks: ZenmlMarks, attributes: ZenmlAttributes, childrenArgs: ChildrenArgs) => Nodes;
+  private builder!: DocumentBuilder;
+  private innerCreateElement: InnerCreateElement;
 
-  public constructor(innerCreateElement: (document: Document, tagName: string, marks: ZenmlMarks, attributes: ZenmlAttributes, childrenArgs: ChildrenArgs) => Nodes) {
+  public constructor(innerCreateElement: InnerCreateElement) {
     this.innerCreateElement = innerCreateElement;
   }
 
   public initialize(zenmlParser: ZenmlParser): void {
     this.zenmlParser = zenmlParser;
-    this.document = zenmlParser.document;
+    this.builder = new DocumentBuilder(zenmlParser.document);
   }
 
   public getParser(): Parser<Nodes> {
@@ -46,7 +49,10 @@ export class SimpleZenmlPlugin {
   }
 
   public createElement(tagName: string, marks: ZenmlMarks, attributes: ZenmlAttributes, childrenArgs: ChildrenArgs): Nodes {
-    return this.innerCreateElement(this.document, tagName, marks, attributes, childrenArgs);
+    return this.innerCreateElement(this.builder, tagName, marks, attributes, childrenArgs);
   }
 
 }
+
+
+export type InnerCreateElement = (builder: DocumentBuilder, tagName: string, marks: ZenmlMarks, attributes: ZenmlAttributes, childrenArgs: ChildrenArgs) => Nodes;

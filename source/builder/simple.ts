@@ -2,16 +2,16 @@
 
 import escapeXml from "xml-escape";
 import {
-  CreatableDocument
-} from "./document";
+  Fragment
+} from "./fragment";
 import {
-  Fragment,
+  DocumentLike,
   NodeCallback,
   NodeLike
-} from "./fragment";
+} from "./type";
 
 
-export abstract class BaseSimpleDocument<D extends BaseSimpleDocument<D, E>, E extends BaseSimpleElement<D, E>> implements CreatableDocument<E, string> {
+export abstract class BaseSimpleDocument<D extends BaseSimpleDocument<D, E>, E extends BaseSimpleElement<D, E>> implements DocumentLike<E, string> {
 
   public readonly documentElement: E;
 
@@ -55,7 +55,7 @@ export abstract class BaseSimpleDocument<D extends BaseSimpleDocument<D, E>, E e
 }
 
 
-export class BaseSimpleElement<D extends CreatableDocument<E, string>, E extends BaseSimpleElement<D, E>> {
+export class BaseSimpleElement<D extends DocumentLike<E, string>, E extends BaseSimpleElement<D, E>> {
 
   public tagName: string;
   private attributes: Map<string, string>;

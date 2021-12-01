@@ -60,13 +60,13 @@ describe("macros and plugins", () => {
     shouldFail(`&macro<nondigits>`, {}, [["macro", plugin]]);
   });
   test("simple plugin", () => {
-    let plugin = new SimpleZenmlPlugin((document, tagName, marks, attributes, childrenArgs) => {
-      let element = document.createElement("tr");
+    let plugin = new SimpleZenmlPlugin((builder, tagName, marks, attributes, childrenArgs) => {
+      let element = builder.createElement("tr");
       for (let [attributeName, attributeValue] of attributes) {
         element.setAttribute(attributeName, attributeValue);
       }
       for (let children of childrenArgs) {
-        let innerElement = document.createElement("td");
+        let innerElement = builder.createElement("td");
         for (let child of children) {
           innerElement.appendChild(child);
         }

@@ -1,37 +1,61 @@
 //
 
 import {
-  CreatableDocument
-} from "./document";
-import {
-  Fragment,
-  NodeCallback
+  Fragment
 } from "./fragment";
+import {
+  DocumentLike,
+  NodeCallback,
+  NodeLike,
+  ParentNodeLike
+} from "./type";
 
 
-export abstract class DocumentBuilder<D extends CreatableDocument<E, T>, E, T> {
+export abstract class BaseDocumentBuilder<D extends DocumentLike<E, T>, E, T> {
 
   protected document!: D;
 
-  protected buildDocument(rootTagName: string, callback?: NodeCallback<D>): D {
-    let self = this.createDocument(rootTagName);
-    this.document = self;
-    callback?.call(this, self);
-    return self;
+  public constructor(document: D) {
+    this.document = document;
   }
 
-  protected abstract createDocument(rootTagName: string): D;
+  public appendChild<N extends NodeLike<D, E, T>>(parent: ParentNodeLike<E, T>, child: N, callback?: NodeCallback<N>): void {
+    callback?.call(this, child);
+    if (child instanceof Fragment) {
+      for (let innerChild of child.nodes) {
+        parent.appendChild(innerChild);
+      }
+    } else {
+      let castChild = child as E | T;
+      parent.appendChild(castChild);
+    }
+  }
 
-  protected createFragment(): Fragment<D, E, T> {
+  public appendElement(parent: ParentNodeLike<E, T>, tagName: string, callback?: NodeCallback<E>): void {
+    let element = this.document.createElement(tagName);
+    this.appendChild(parent, element, callback);
+  }
+
+  public appendTextNode(parent: ParentNodeLike<E, T>, content: string, callback?: NodeCallback<T>): void {
+    let text = this.document.createTextNode(content);
+    this.appendChild(parent, text, callback);
+  }
+
+  public createFragment(): Fragment<D, E, T> {
     return new Fragment(this.document);
   }
 
-  protected createElement(tagName: string): E {
+  public createElement(tagName: string): E {
     return this.document.createElement(tagName);
   }
 
-  protected createTextNode(content: string): T {
+  public createTextNode(content: string): T {
     return this.document.createTextNode(content);
   }
+
+}
+
+
+export class DocumentBuilder extends BaseDocumentBuilder<Document, Element, Text> {
 
 }

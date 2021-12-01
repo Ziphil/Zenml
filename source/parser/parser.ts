@@ -12,6 +12,8 @@ import {
   isText
 } from "../util/dom";
 import {
+  InnerCreateElement,
+  SimpleZenmlPlugin,
   ZenmlPlugin
 } from "./plugin";
 import {
@@ -100,6 +102,15 @@ export class ZenmlParser {
   public registerPlugin(name: string, plugin: ZenmlPlugin): void {
     this.plugins.set(name, plugin);
     plugin.initialize(this);
+  }
+
+  public registerSimplePlugin(name: string, innerCreateElement: InnerCreateElement): void {
+    let plugin = new SimpleZenmlPlugin(innerCreateElement);
+    this.registerPlugin(name, plugin);
+  }
+
+  public deregisterPlugin(name: string): void {
+    this.plugins.delete(name);
   }
 
   public updateDocument(): void {
