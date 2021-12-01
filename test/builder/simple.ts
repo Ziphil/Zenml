@@ -1,13 +1,13 @@
 //
 
 import {
-  BaseSimpleDocumentOptions,
+  BaseDocumentOptions,
   SimpleDocument,
   SimpleDocumentBuilder
 } from "../../source";
 
 
-export function createBuilder(options?: BaseSimpleDocumentOptions): [SimpleDocument, SimpleDocumentBuilder] {
+export function createBuilder(options?: BaseDocumentOptions): [SimpleDocument, SimpleDocumentBuilder] {
   let document = new SimpleDocument(options);
   let builder = new SimpleDocumentBuilder(document);
   return [document, builder];

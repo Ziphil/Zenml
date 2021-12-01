@@ -17,15 +17,15 @@ export class Fragment<D extends DocumentLike<E, T>, E, T> {
     this.nodes = [];
   }
 
-  public appendChild<N extends NodeLike<D, E, T>>(node: N, callback?: NodeCallback<N>): N {
-    callback?.call(this, node);
-    if (node instanceof Fragment) {
-      this.nodes.push(...node.nodes);
+  public appendChild<N extends NodeLike<D, E, T>>(child: N, callback?: NodeCallback<N>): N {
+    callback?.call(this, child);
+    if (child instanceof Fragment) {
+      this.nodes.push(...child.nodes);
     } else {
-      let castNode = node as E | T;
-      this.nodes.push(castNode);
+      let castChild = child as E | T;
+      this.nodes.push(castChild);
     }
-    return node;
+    return child;
   }
 
   public appendElement(tagName: string, callback?: NodeCallback<E>): E {

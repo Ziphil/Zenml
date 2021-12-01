@@ -11,17 +11,17 @@ import {
 } from "./type";
 
 
-export type BaseSimpleDocumentOptions = {
+export type BaseDocumentOptions = {
   includeDeclaration?: boolean;
 };
 
 
-export abstract class BaseSimpleDocument<D extends BaseSimpleDocument<D, E>, E extends BaseSimpleElement<D, E>> implements DocumentLike<E, string> {
+export abstract class BaseDocument<D extends BaseDocument<D, E>, E extends BaseElement<D, E>> implements DocumentLike<E, string> {
 
   protected readonly fragment: Fragment<D, E, string>;
-  protected readonly options: BaseSimpleDocumentOptions;
+  protected readonly options: BaseDocumentOptions;
 
-  public constructor(options?: BaseSimpleDocumentOptions) {
+  public constructor(options?: BaseDocumentOptions) {
     this.fragment = this.createFragment();
     this.options = options ?? {};
   }
@@ -37,8 +37,8 @@ export abstract class BaseSimpleDocument<D extends BaseSimpleDocument<D, E>, E e
     return content;
   }
 
-  public appendChild<N extends NodeLike<D, E, string>>(node: N, callback?: NodeCallback<N>): N {
-    return this.fragment.appendChild(node, callback);
+  public appendChild<N extends NodeLike<D, E, string>>(child: N, callback?: NodeCallback<N>): N {
+    return this.fragment.appendChild(child, callback);
   }
 
   public appendElement(tagName: string, callback?: NodeCallback<E>): E {
@@ -63,7 +63,7 @@ export abstract class BaseSimpleDocument<D extends BaseSimpleDocument<D, E>, E e
 }
 
 
-export class BaseSimpleElement<D extends DocumentLike<E, string>, E extends BaseSimpleElement<D, E>> {
+export abstract class BaseElement<D extends DocumentLike<E, string>, E extends BaseElement<D, E>> {
 
   public tagName: string;
   protected readonly attributes: Map<string, string>;
@@ -75,8 +75,8 @@ export class BaseSimpleElement<D extends DocumentLike<E, string>, E extends Base
     this.fragment = new Fragment(document);
   }
 
-  public appendChild<N extends NodeLike<D, E, string>>(node: N, callback?: NodeCallback<N>): N {
-    return this.fragment.appendChild(node, callback);
+  public appendChild<N extends NodeLike<D, E, string>>(child: N, callback?: NodeCallback<N>): N {
+    return this.fragment.appendChild(child, callback);
   }
 
   public appendElement(tagName: string, callback?: NodeCallback<E>): E {
@@ -112,7 +112,7 @@ export class BaseSimpleElement<D extends DocumentLike<E, string>, E extends Base
 }
 
 
-export class SimpleDocument extends BaseSimpleDocument<SimpleDocument, SimpleElement> {
+export class SimpleDocument extends BaseDocument<SimpleDocument, SimpleElement> {
 
   public createElement(tagName: string): SimpleElement {
     return new SimpleElement(this, tagName);
@@ -121,6 +121,6 @@ export class SimpleDocument extends BaseSimpleDocument<SimpleDocument, SimpleEle
 }
 
 
-export class SimpleElement extends BaseSimpleElement<SimpleDocument, SimpleElement> {
+export class SimpleElement extends BaseElement<SimpleDocument, SimpleElement> {
 
 }
