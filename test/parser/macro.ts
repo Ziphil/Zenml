@@ -36,8 +36,8 @@ class TestZenmlPlugin implements ZenmlPlugin {
     return parser;
   }
 
-  public createElement(name: string, marks: ZenmlMarks, attributes: ZenmlAttributes, childrenList: Array<Nodes>): Nodes {
-    let element = this.document.createElement(name);
+  public createElement(tagName: string, marks: ZenmlMarks, attributes: ZenmlAttributes, childrenList: Array<Nodes>): Nodes {
+    let element = this.document.createElement(tagName);
     let children = childrenList[0] ?? [];
     for (let [attributeName, attributeValue] of attributes) {
       element.setAttribute(attributeName, attributeValue);
@@ -59,7 +59,7 @@ describe("macros and plugins", () => {
     shouldFail(`&macro<nondigits>`, {}, [["macro", plugin]]);
   });
   test("simple plugin", () => {
-    let plugin = new SimpleZenmlPlugin((document, name, marks, attributes, childrenList) => {
+    let plugin = new SimpleZenmlPlugin((document, tagName, marks, attributes, childrenList) => {
       let element = document.createElement("tr");
       for (let [attributeName, attributeValue] of attributes) {
         element.setAttribute(attributeName, attributeValue);

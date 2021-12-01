@@ -66,9 +66,10 @@ export type ZenmlMarks = ReadonlyArray<ZenmlMark>;
 export type ZenmlSpecialElementKind = keyof typeof SPECIAL_ELEMENT_STARTS;
 export type ZenmlAttribute = readonly [name: string, value: string];
 export type ZenmlAttributes = Map<string, string>;
-export type ZenmlTagSpec = readonly [name: string, marks: ZenmlMarks, attributes: ZenmlAttributes, macro: boolean];
+export type ZenmlTagSpec = readonly [tagName: string, marks: ZenmlMarks, attributes: ZenmlAttributes, macro: boolean];
 
 export type Nodes = Array<Node>;
+export type ChildrenArgs = Array<Nodes>;
 
 type ZenmlParserState = {
   verbal?: boolean,
@@ -151,46 +152,46 @@ export class ZenmlParser {
     let parser = seq(
       this.tag
     ).chain(([tagSpec]) => {
-      let [name, marks, attributes, macro] = tagSpec;
-      let nextState = this.determineNextState(state, name, marks, attributes, macro);
-      let nextParser = this.determineNextParser(nextState, name, marks, attributes, macro);
+      let [tagName, marks, attributes, macro] = tagSpec;
+      let nextState = this.determineNextState(state, tagName, marks, attributes, macro);
+      let nextParser = this.determineNextParser(nextState, tagName, marks, attributes, macro);
       return nextParser;
     }).thru(mapCatch(([tagSpec, childrenList]) => {
-      let [name, marks, attributes, macro] = tagSpec;
-      this.modifyChildrenList(name, marks, attributes, macro, childrenList);
+      let [tagName, marks, attributes, macro] = tagSpec;
+      this.modifyChildrenList(tagName, marks, attributes, macro, childrenList);
       if (macro) {
-        return this.processMacro(name, marks, attributes, childrenList);
+        return this.processMacro(tagName, marks, attributes, childrenList);
       } else {
-        return this.createElement(name, marks, attributes, childrenList);
+        return this.createElement(tagName, marks, attributes, childrenList);
       }
     }));
     return parser;
   });
 
-  private determineNextState(state: ZenmlParserState, name: string, marks: ZenmlMarks, attributes: ZenmlAttributes, macro: boolean): ZenmlParserState {
+  private determineNextState(state: ZenmlParserState, tagName: string, marks: ZenmlMarks, attributes: ZenmlAttributes, macro: boolean): ZenmlParserState {
     let nextState = {...state, inSlash: false};
     if (marks.includes("verbal")) {
       nextState = {...nextState, verbal: true};
     }
     if (macro) {
-      nextState = {...nextState, pluginName: name};
+      nextState = {...nextState, pluginName: tagName};
     }
     return nextState;
   }
 
-  private determineNextParser(nextState: ZenmlParserState, name: string, marks: ZenmlMarks, attributes: ZenmlAttributes, macro: boolean): Parser<readonly [ZenmlTagSpec, Array<Nodes>]> {
+  private determineNextParser(nextState: ZenmlParserState, tagName: string, marks: ZenmlMarks, attributes: ZenmlAttributes, macro: boolean): Parser<readonly [ZenmlTagSpec, Array<Nodes>]> {
     let nextParser = seq(
       this.childrenList(nextState),
-      (name === SYSTEM_INSTRUCTION_NAME && marks.includes("instruction")) ? this.blank : Parsimmon.succeed(null)
+      (tagName === SYSTEM_INSTRUCTION_NAME && marks.includes("instruction")) ? this.blank : Parsimmon.succeed(null)
     ).map(([childrenList]) => {
-      let tagSpec = [name, marks, attributes, macro] as const;
+      let tagSpec = [tagName, marks, attributes, macro] as const;
       let result = [tagSpec, childrenList] as const;
       return result;
     });
     return nextParser;
   }
 
-  private modifyChildrenList(name: string, marks: ZenmlMarks, attributes: ZenmlAttributes, macro: boolean, childrenList: Array<Nodes>): void {
+  private modifyChildrenList(tagName: string, marks: ZenmlMarks, attributes: ZenmlAttributes, macro: boolean, childrenList: Array<Nodes>): void {
     if (childrenList.length >= 2 && !macro && !marks.includes("multiple")) {
       throw "Normal element cannot have more than one argument";
     }
@@ -201,10 +202,10 @@ export class ZenmlParser {
     }
   }
 
-  private processMacro(name: string, marks: ZenmlMarks, attributes: ZenmlAttributes, childrenList: Array<Nodes>): Nodes {
-    let plugin = this.plugins.get(name);
+  private processMacro(tagName: string, marks: ZenmlMarks, attributes: ZenmlAttributes, childrenList: Array<Nodes>): Nodes {
+    let plugin = this.plugins.get(tagName);
     if (plugin !== undefined) {
-      let element = plugin.createElement(name, marks, attributes, childrenList);
+      let element = plugin.createElement(tagName, marks, attributes, childrenList);
       return element;
     } else {
       throw "No such plugin";
@@ -277,10 +278,10 @@ export class ZenmlParser {
       this.identifier,
       this.marks,
       this.attributes.thru(maybe)
-    ).map(([startChar, name, marks, rawAttributes]) => {
+    ).map(([startChar, tagName, marks, rawAttributes]) => {
       let macro = startChar === MACRO_START;
       let attributes = rawAttributes ?? new Map();
-      return [name, marks, attributes, macro] as const;
+      return [tagName, marks, attributes, macro] as const;
     });
     return parser;
   });
@@ -478,16 +479,16 @@ export class ZenmlParser {
     return parser;
   });
 
-  protected createElement(name: string, marks: ZenmlMarks, attributes: ZenmlAttributes, childrenList: Array<Nodes>): Nodes {
+  protected createElement(tagName: string, marks: ZenmlMarks, attributes: ZenmlAttributes, childrenList: Array<Nodes>): Nodes {
     if (marks.includes("instruction")) {
-      return this.createInstruction(name, marks, attributes, childrenList);
+      return this.createInstruction(tagName, marks, attributes, childrenList);
     } else {
-      return this.createNormalElement(name, marks, attributes, childrenList);
+      return this.createNormalElement(tagName, marks, attributes, childrenList);
     }
   }
 
-  protected createInstruction(name: string, marks: ZenmlMarks, attributes: ZenmlAttributes, childrenList: Array<Nodes>): Nodes {
-    if (name === SYSTEM_INSTRUCTION_NAME) {
+  protected createInstruction(tagName: string, marks: ZenmlMarks, attributes: ZenmlAttributes, childrenList: Array<Nodes>): Nodes {
+    if (tagName === SYSTEM_INSTRUCTION_NAME) {
       if (childrenList.length <= 0) {
         return [];
       } else {
@@ -508,7 +509,7 @@ export class ZenmlParser {
           }
         }
         let content = contents.join(" ");
-        let instruction = this.document.createProcessingInstruction(name, content);
+        let instruction = this.document.createProcessingInstruction(tagName, content);
         return [instruction];
       } else {
         throw "Processing instruction cannot have more than one argument";
@@ -516,13 +517,13 @@ export class ZenmlParser {
     }
   }
 
-  protected createNormalElement(name: string, marks: ZenmlMarks, attributes: ZenmlAttributes, childrenList: Array<Nodes>): Nodes {
+  protected createNormalElement(tagName: string, marks: ZenmlMarks, attributes: ZenmlAttributes, childrenList: Array<Nodes>): Nodes {
     let nodes = [];
     if (childrenList.length <= 0) {
       childrenList = [[]];
     }
     for (let children of childrenList) {
-      let element = this.document.createElement(name);
+      let element = this.document.createElement(tagName);
       for (let [attributeName, attributeValue] of attributes) {
         element.setAttribute(attributeName, attributeValue);
       }
@@ -535,9 +536,9 @@ export class ZenmlParser {
   }
 
   protected createSpecialElement(kind: ZenmlSpecialElementKind, children: Nodes): Nodes {
-    let name = this.options.specialElementNames?.[kind];
-    if (name !== undefined) {
-      let nodes = this.createNormalElement(name, [], new Map(), [children]);
+    let tagName = this.options.specialElementNames?.[kind];
+    if (tagName !== undefined) {
+      let nodes = this.createNormalElement(tagName, [], new Map(), [children]);
       return nodes;
     } else {
       throw `No name specified for ${kind} elements`;

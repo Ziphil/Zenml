@@ -3,7 +3,7 @@
 
 export interface CreatableDocument<E, T> {
 
-  createElement(name: string): E;
+  createElement(tagName: string): E;
 
   createTextNode(content: string): T;
 

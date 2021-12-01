@@ -26,8 +26,8 @@ export class Fragment<D extends CreatableDocument<E, T>, E, T> {
     return node;
   }
 
-  public appendElement(name: string, callback?: NodeCallback<E>): E {
-    let element = this.document.createElement(name);
+  public appendElement(tagName: string, callback?: NodeCallback<E>): E {
+    let element = this.document.createElement(tagName);
     this.appendChild(element, callback);
     return element;
   }
