@@ -18,11 +18,11 @@ export class Fragment<D extends CreatableDocument<E, T>, E, T> {
 
   public appendChild<N extends NodeLike<D, E, T>>(node: N, callback?: NodeCallback<N>): N {
     callback?.(node);
-    let anyNode = node as any;
     if (node instanceof Fragment) {
       this.nodes.push(...node.nodes);
     } else {
-      this.nodes.push(anyNode);
+      let castNode = node as E | T;
+      this.nodes.push(castNode);
     }
     return node;
   }
