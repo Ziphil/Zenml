@@ -12,9 +12,8 @@ import {
   isText
 } from "../util/dom";
 import {
-  InnerCreateElement,
-  SimpleZenmlPlugin,
-  ZenmlPlugin
+  ZenmlPluginLike,
+  ZenmlPluginManager
 } from "./plugin";
 import {
   StateParser,
@@ -79,7 +78,6 @@ type ZenmlParserState = {
   pluginName?: string
 };
 export type ZenmlParserOptions = {
-  document?: Document,
   specialElementNames?: {brace?: string, bracket?: string, slash?: string}
 };
 
@@ -88,38 +86,30 @@ export class ZenmlParser {
 
   public document: Document;
   private readonly implementation: DOMImplementation;
-  private readonly plugins: Map<string, ZenmlPlugin>;
+  private readonly pluginManager: ZenmlPluginManager;
   private readonly options: ZenmlParserOptions;
 
   public constructor(implementation: DOMImplementation, options?: ZenmlParserOptions) {
-    let document = options?.document ?? implementation.createDocument(null, null, null);
-    this.document = document;
+    this.document = implementation.createDocument(null, null, null);
     this.implementation = implementation;
-    this.plugins = new Map();
+    this.pluginManager = new ZenmlPluginManager();
     this.options = options ?? {};
   }
 
-  public registerPlugin(name: string, plugin: ZenmlPlugin): void {
-    this.plugins.set(name, plugin);
-    plugin.initialize(this);
-  }
-
-  public registerSimplePlugin(name: string, innerCreateElement: InnerCreateElement): void {
-    let plugin = new SimpleZenmlPlugin(innerCreateElement);
-    this.registerPlugin(name, plugin);
+  public registerPlugin(name: string, plugin: ZenmlPluginLike): void {
+    this.pluginManager.registerPlugin(name, plugin, this);
   }
 
   public deregisterPlugin(name: string): void {
-    this.plugins.delete(name);
+    this.pluginManager.deregisterPlugin(name);
   }
 
-  public updateDocument(): void {
-    let document = this.options.document ?? this.implementation.createDocument(null, null, null);
-    this.document = document;
+  public updateDocument(document?: Document): void {
+    this.document = document ?? this.implementation.createDocument(null, null, null);
   }
 
-  public tryParse(input: string): Document {
-    this.updateDocument();
+  public tryParse(input: string, document?: Document): Document {
+    this.updateDocument(document);
     return this.root.tryParse(input);
   }
 
@@ -136,8 +126,8 @@ export class ZenmlParser {
 
   public readonly nodes: StateParser<Nodes, ZenmlParserState> = create((state) => {
     if (state.pluginName !== undefined) {
-      let plugin = this.plugins.get(state.pluginName);
-      if (plugin !== undefined) {
+      let plugin = this.pluginManager.getPlugin(state.pluginName);
+      if (plugin !== null) {
         let parser = plugin.getParser();
         return parser;
       } else {
@@ -210,8 +200,8 @@ export class ZenmlParser {
   }
 
   private processMacro(tagName: string, marks: ZenmlMarks, attributes: ZenmlAttributes, childrenArgs: ChildrenArgs): Nodes {
-    let plugin = this.plugins.get(tagName);
-    if (plugin !== undefined) {
+    let plugin = this.pluginManager.getPlugin(tagName);
+    if (plugin !== null) {
       let element = plugin.createElement(tagName, marks, attributes, childrenArgs);
       return element;
     } else {
