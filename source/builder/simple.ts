@@ -18,8 +18,8 @@ export type BaseSimpleDocumentOptions = {
 
 export abstract class BaseSimpleDocument<D extends BaseSimpleDocument<D, E>, E extends BaseSimpleElement<D, E>> implements DocumentLike<E, string> {
 
-  private fragment: Fragment<D, E, string>;
-  private options: BaseSimpleDocumentOptions;
+  protected readonly fragment: Fragment<D, E, string>;
+  protected readonly options: BaseSimpleDocumentOptions;
 
   public constructor(options?: BaseSimpleDocumentOptions) {
     this.fragment = this.createFragment();
@@ -66,8 +66,8 @@ export abstract class BaseSimpleDocument<D extends BaseSimpleDocument<D, E>, E e
 export class BaseSimpleElement<D extends DocumentLike<E, string>, E extends BaseSimpleElement<D, E>> {
 
   public tagName: string;
-  private attributes: Map<string, string>;
-  private fragment: Fragment<D, E, string>;
+  protected readonly attributes: Map<string, string>;
+  protected readonly fragment: Fragment<D, E, string>;
 
   public constructor(document: D, tagName: string) {
     this.tagName = tagName;

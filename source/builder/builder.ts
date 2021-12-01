@@ -17,7 +17,7 @@ import {
 
 export class BaseDocumentBuilder<D extends DocumentLike<E, T>, E, T> {
 
-  protected document!: D;
+  protected readonly document!: D;
 
   public constructor(document: D) {
     this.document = document;

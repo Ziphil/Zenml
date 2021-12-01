@@ -9,8 +9,8 @@ import {
 
 export class Fragment<D extends DocumentLike<E, T>, E, T> {
 
-  protected document: D;
-  public nodes: Array<E | T>;
+  protected readonly document: D;
+  public readonly nodes: Array<E | T>;
 
   public constructor(document: D) {
     this.document = document;
