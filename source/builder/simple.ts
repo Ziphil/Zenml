@@ -11,12 +11,19 @@ import {
 } from "./type";
 
 
+export type BaseSimpleDocumentOptions = {
+  includeDeclaration?: boolean;
+};
+
+
 export abstract class BaseSimpleDocument<D extends BaseSimpleDocument<D, E>, E extends BaseSimpleElement<D, E>> implements DocumentLike<E, string> {
 
-  public readonly documentElement: E;
+  private fragment: Fragment<D, E, string>;
+  private options: BaseSimpleDocumentOptions;
 
-  public constructor(rootTagName: string) {
-    this.documentElement = this.createElement(rootTagName);
+  public constructor(options?: BaseSimpleDocumentOptions) {
+    this.fragment = this.createFragment();
+    this.options = options ?? {};
   }
 
   public createFragment(): Fragment<D, E, string> {
@@ -31,24 +38,25 @@ export abstract class BaseSimpleDocument<D extends BaseSimpleDocument<D, E>, E e
   }
 
   public appendChild<N extends NodeLike<D, E, string>>(node: N, callback?: NodeCallback<N>): N {
-    return this.documentElement.appendChild(node, callback);
+    return this.fragment.appendChild(node, callback);
   }
 
   public appendElement(tagName: string, callback?: NodeCallback<E>): E {
-    return this.documentElement.appendElement(tagName, callback);
+    return this.fragment.appendElement(tagName, callback);
   }
 
-  public getAttribute(name: string): string | null {
-    return this.documentElement.getAttribute(name);
-  }
-
-  public setAttribute(name: string, value: string): void {
-    this.documentElement.setAttribute(name, value);
+  public appendTextNode(content: string, callback?: NodeCallback<string>): string {
+    return this.fragment.appendTextNode(content, callback);
   }
 
   public toString(): string {
-    let string = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-    string += this.documentElement.toString();
+    let string = "";
+    if (this.options.includeDeclaration) {
+      string += "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+    }
+    for (let node of this.fragment.nodes) {
+      string += node.toString();
+    }
     return string;
   }
 
@@ -73,6 +81,10 @@ export class BaseSimpleElement<D extends DocumentLike<E, string>, E extends Base
 
   public appendElement(tagName: string, callback?: NodeCallback<E>): E {
     return this.fragment.appendElement(tagName, callback);
+  }
+
+  public appendTextNode(content: string, callback?: NodeCallback<string>): string {
+    return this.fragment.appendTextNode(content, callback);
   }
 
   public getAttribute(name: string): string | null {

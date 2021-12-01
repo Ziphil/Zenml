@@ -4,6 +4,10 @@ import {
   Fragment
 } from "./fragment";
 import {
+  SimpleDocument,
+  SimpleElement
+} from "./simple";
+import {
   DocumentLike,
   NodeCallback,
   NodeLike,
@@ -11,7 +15,7 @@ import {
 } from "./type";
 
 
-export abstract class BaseDocumentBuilder<D extends DocumentLike<E, T>, E, T> {
+export class BaseDocumentBuilder<D extends DocumentLike<E, T>, E, T> {
 
   protected document!: D;
 
@@ -57,5 +61,10 @@ export abstract class BaseDocumentBuilder<D extends DocumentLike<E, T>, E, T> {
 
 
 export class DocumentBuilder extends BaseDocumentBuilder<Document, Element, Text> {
+
+}
+
+
+export class SimpleDocumentBuilder extends BaseDocumentBuilder<SimpleDocument, SimpleElement, string> {
 
 }
