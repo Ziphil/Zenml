@@ -43,7 +43,7 @@ describe("xml builder", () => {
   });
   test("fragment", () => {
     let [document, builder] = createBuilder();
-    let fragment = builder.createFragment();
+    let fragment = builder.createDocumentFragment();
     builder.appendElement(fragment, "first", (self) => {
       builder.appendElement(self, "inner");
     });

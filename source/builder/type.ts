@@ -1,11 +1,9 @@
 //
 
-import type {
-  Fragment
-} from "./fragment";
 
+export interface DocumentLike<F, E, T> {
 
-export interface DocumentLike<E, T> {
+  createDocumentFragment(): F;
 
   createElement(tagName: string): E;
 
@@ -14,12 +12,12 @@ export interface DocumentLike<E, T> {
 }
 
 
-export interface ParentNodeLike<E, T> {
+export interface ParentNodeLike<F, E, T> {
 
-  appendChild(child: E | T): void;
+  appendChild(child: F | E | T): void;
 
 }
 
 
 export type NodeCallback<N> = (node: N) => void;
-export type NodeLike<D extends DocumentLike<E, T>, E, T> = Fragment<D, E, T> | E | T;
+export type NodeLike<F, E, T> = F | E | T;

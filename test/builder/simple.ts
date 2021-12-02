@@ -38,7 +38,7 @@ describe("simple document builder (method style)", () => {
   });
   test("fragment", () => {
     let document = new SimpleDocument({includeDeclaration: false});
-    let fragment = document.createFragment();
+    let fragment = document.createDocumentFragment();
     fragment.appendElement("first", (self) => {
       self.appendElement("inner");
     });
@@ -75,7 +75,7 @@ describe("simple document builder (builder style)", () => {
   });
   test("fragment", () => {
     let [document, builder] = createBuilder({includeDeclaration: false});
-    let fragment = builder.createFragment();
+    let fragment = builder.createDocumentFragment();
     builder.appendElement(fragment, "first", (self) => {
       builder.appendElement(self, "inner");
     });

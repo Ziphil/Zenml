@@ -1,12 +1,14 @@
 //
 
 import {
-  Fragment
-} from "./fragment";
+  SimpleDocument
+} from "../simple-dom/document";
 import {
-  SimpleDocument,
   SimpleElement
-} from "./simple";
+} from "../simple-dom/element";
+import {
+  SimpleDocumentFragment
+} from "../simple-dom/fragment";
 import {
   DocumentLike,
   NodeCallback,
@@ -15,7 +17,7 @@ import {
 } from "./type";
 
 
-export class BaseDocumentBuilder<D extends DocumentLike<E, T>, E, T> {
+export class BaseDocumentBuilder<D extends DocumentLike<F, E, T>, F, E, T> {
 
   protected readonly document!: D;
 
@@ -23,30 +25,23 @@ export class BaseDocumentBuilder<D extends DocumentLike<E, T>, E, T> {
     this.document = document;
   }
 
-  public appendChild<N extends NodeLike<D, E, T>>(parent: ParentNodeLike<E, T>, child: N, callback?: NodeCallback<N>): void {
+  public appendChild<N extends NodeLike<F, E, T>>(parent: ParentNodeLike<F, E, T>, child: N, callback?: NodeCallback<N>): void {
     callback?.call(this, child);
-    if (child instanceof Fragment) {
-      for (let innerChild of child.nodes) {
-        parent.appendChild(innerChild);
-      }
-    } else {
-      let castChild = child as E | T;
-      parent.appendChild(castChild);
-    }
+    parent.appendChild(child);
   }
 
-  public appendElement(parent: ParentNodeLike<E, T>, tagName: string, callback?: NodeCallback<E>): void {
+  public appendElement(parent: ParentNodeLike<F, E, T>, tagName: string, callback?: NodeCallback<E>): void {
     let element = this.document.createElement(tagName);
     this.appendChild(parent, element, callback);
   }
 
-  public appendTextNode(parent: ParentNodeLike<E, T>, content: string, callback?: NodeCallback<T>): void {
+  public appendTextNode(parent: ParentNodeLike<F, E, T>, content: string, callback?: NodeCallback<T>): void {
     let text = this.document.createTextNode(content);
     this.appendChild(parent, text, callback);
   }
 
-  public createFragment(): Fragment<D, E, T> {
-    return new Fragment(this.document);
+  public createDocumentFragment(): F {
+    return this.document.createDocumentFragment();
   }
 
   public createElement(tagName: string): E {
@@ -60,11 +55,11 @@ export class BaseDocumentBuilder<D extends DocumentLike<E, T>, E, T> {
 }
 
 
-export class DocumentBuilder extends BaseDocumentBuilder<Document, Element, Text> {
+export class DocumentBuilder extends BaseDocumentBuilder<Document, DocumentFragment, Element, Text> {
 
 }
 
 
-export class SimpleDocumentBuilder extends BaseDocumentBuilder<SimpleDocument, SimpleElement, string> {
+export class SimpleDocumentBuilder extends BaseDocumentBuilder<SimpleDocument, SimpleDocumentFragment, SimpleElement, string> {
 
 }
