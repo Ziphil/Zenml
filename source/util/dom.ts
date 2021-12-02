@@ -10,14 +10,14 @@ export function isText(node: Node): node is Text {
 }
 
 export function getDescendantTexts(element: Element): Array<Text> {
-  let texts = [];
-  for (let child of Array.from(element.childNodes)) {
+  let texts = [] as Array<Text>;
+  element.childNodes.forEach((child) => {
     if (isText(child)) {
       texts.push(child);
     } else if (isElement(child)) {
       texts.push(...getDescendantTexts(child));
     }
-  }
+  });
   return texts;
 }
 
