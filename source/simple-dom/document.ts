@@ -5,13 +5,13 @@ import {
   NodeLike
 } from "../builder/type";
 import {
+  BaseDocumentFragment,
+  SimpleDocumentFragment
+} from "./document-fragment";
+import {
   BaseElement,
   SimpleElement
 } from "./element";
-import {
-  BaseDocumentFragment,
-  SimpleDocumentFragment
-} from "./fragment";
 
 
 export type BaseDocumentOptions = {

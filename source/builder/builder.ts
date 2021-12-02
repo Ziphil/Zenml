@@ -4,11 +4,11 @@ import {
   SimpleDocument
 } from "../simple-dom/document";
 import {
+  SimpleDocumentFragment
+} from "../simple-dom/document-fragment";
+import {
   SimpleElement
 } from "../simple-dom/element";
-import {
-  SimpleDocumentFragment
-} from "../simple-dom/fragment";
 import {
   DocumentLike,
   NodeCallback,

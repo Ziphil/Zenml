@@ -12,7 +12,7 @@ import type {
 import type {
   BaseDocumentFragment,
   SimpleDocumentFragment
-} from "./fragment";
+} from "./document-fragment";
 
 
 export abstract class BaseElement<D extends BaseDocument<D, F, E>, F extends BaseDocumentFragment<D, F, E>, E extends BaseElement<D, F, E>> {
