@@ -14,7 +14,7 @@ import {
 } from "../type/dom";
 
 
-export class BaseDocumentBuilder<D extends DocumentLike<any, any, any>> {
+export class BaseDocumentBuilder<D extends DocumentLike<DocumentFragmentOf<D>, ElementOf<D>, TextOf<D>>> {
 
   protected readonly document!: D;
 

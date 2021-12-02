@@ -4,9 +4,7 @@ import {
   DocumentFragmentOf,
   DocumentLike,
   ElementOf,
-  NodeCallback,
   NodeLikeOf,
-  ParentNodeLikeOf,
   TextOf
 } from "../type/dom";
 import {
@@ -18,35 +16,53 @@ import type {
 } from "./transformer";
 
 
-export class TransformTemplateManager<D extends DocumentLike<any, any, any>> {
+export class TransformTemplateManager<D extends DocumentLike<DocumentFragmentOf<D>, ElementOf<D>, TextOf<D>>> {
 
-  private readonly rules: Array<[StringPattern, StringPattern, TransformRule<D>]>;
-  private readonly factories: Map<string, TransformFactory<D>>;
+  private readonly elementRules: Array<[StringPattern, StringPattern, TransformRule<D, Element>]>;
+  private readonly textRules: Array<[StringPattern, TransformRule<D, Text>]>;
+  private readonly elementFactories: Map<string, TransformFactory<D, Element>>;
+  private readonly textFactories: Map<string, TransformFactory<D, Text>>;
 
   public constructor() {
-    this.rules = [];
-    this.factories = new Map();
+    this.elementRules = [];
+    this.textRules = [];
+    this.elementFactories = new Map();
+    this.textFactories = new Map();
   }
 
-  public registerRule(tagNamePattern: StringPattern, scopePattern: StringPattern, rule: TransformRule<D>): void {
-    this.rules.push([tagNamePattern, scopePattern, rule]);
+  public registerElementRule(tagNamePattern: StringPattern, scopePattern: StringPattern, rule: TransformRule<D, Element>): void {
+    this.elementRules.push([tagNamePattern, scopePattern, rule]);
   }
 
-  public registerFactory(name: string, factory: TransformFactory<D>): void {
-    this.factories.set(name, factory);
+  public registerTextRule(scopePattern: StringPattern, rule: TransformRule<D, Text>): void {
+    this.textRules.push([scopePattern, rule]);
+  }
+
+  public registerElementFactory(name: string, factory: TransformFactory<D, Element>): void {
+    this.elementFactories.set(name, factory);
+  }
+
+  public registerTextFactory(name: string, factory: TransformFactory<D, Text>): void {
+    this.textFactories.set(name, factory);
   }
 
   public regsiterTemplateManager(manager: TransformTemplateManager<D>): void {
-    for (let addedRule of manager.rules) {
-      this.rules.push(addedRule);
+    for (let addedRule of manager.elementRules) {
+      this.elementRules.push(addedRule);
     }
-    for (let [addedName, addedFunction] of manager.factories) {
-      this.factories.set(addedName, addedFunction);
+    for (let addedRule of manager.textRules) {
+      this.textRules.push(addedRule);
+    }
+    for (let [addedName, addedFactory] of manager.elementFactories) {
+      this.elementFactories.set(addedName, addedFactory);
+    }
+    for (let [addedName, addedFactory] of manager.textFactories) {
+      this.textFactories.set(addedName, addedFactory);
     }
   }
 
-  public findRule(tagName: string, scope: string): TransformRule<D> | null {
-    for (let [tagNamePattern, scopePattern, rule] of this.rules) {
+  public findElementRule(tagName: string, scope: string): TransformRule<D, Element> | null {
+    for (let [tagNamePattern, scopePattern, rule] of this.elementRules) {
       if (matchString(tagName, tagNamePattern) && matchString(scope, scopePattern)) {
         return rule;
       }
@@ -54,12 +70,25 @@ export class TransformTemplateManager<D extends DocumentLike<any, any, any>> {
     return null;
   }
 
-  public findFactory(name: string): TransformFactory<D> | null {
-    return this.factories.get(name) ?? null;
+  public findTextRule(scope: string): TransformRule<D, Text> | null {
+    for (let [scopePattern, rule] of this.textRules) {
+      if (matchString(scope, scopePattern)) {
+        return rule;
+      }
+    }
+    return null;
+  }
+
+  public findElementFactory(name: string): TransformFactory<D, Element> | null {
+    return this.elementFactories.get(name) ?? null;
+  }
+
+  public findTextFactory(name: string): TransformFactory<D, Text> | null {
+    return this.textFactories.get(name) ?? null;
   }
 
 }
 
 
-export type TransformRule<D extends DocumentLike<any, any, any>> = (transformer: Transformer<D>, document: D, element: ElementOf<D>, scope: string, args: any) => NodeLikeOf<D>;
-export type TransformFactory<D extends DocumentLike<any, any, any>> = (transformer: Transformer<D>, document: D, element: ElementOf<D>, args: any) => NodeLikeOf<D>;
+export type TransformRule<D extends DocumentLike<any, any, any>, N> = (transformer: Transformer<D>, document: D, node: N, scope: string, args: any) => NodeLikeOf<D>;
+export type TransformFactory<D extends DocumentLike<any, any, any>, N> = (transformer: Transformer<D>, document: D, node: N, args: any) => NodeLikeOf<D>;
