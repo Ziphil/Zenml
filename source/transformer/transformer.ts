@@ -8,7 +8,7 @@ import {
   NodeLikeOf,
   ParentNodeLikeOf,
   TextOf
-} from "../builder/type";
+} from "../type/dom";
 import {
   TransformTemplateManager
 } from "./template-manager";

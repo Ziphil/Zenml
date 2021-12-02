@@ -3,7 +3,7 @@
 import {
   NodeCallback,
   NodeLike
-} from "../builder/type";
+} from "../type/dom";
 import type {
   BaseDocument,
   SimpleDocument

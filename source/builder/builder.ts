@@ -11,7 +11,7 @@ import {
   NodeLikeOf,
   ParentNodeLikeOf,
   TextOf
-} from "./type";
+} from "../type/dom";
 
 
 export class BaseDocumentBuilder<D extends DocumentLike<any, any, any>> {

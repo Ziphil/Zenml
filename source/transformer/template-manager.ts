@@ -8,10 +8,7 @@ import {
   NodeLikeOf,
   ParentNodeLikeOf,
   TextOf
-} from "../builder/type";
-import {
-  NodeLike
-} from "../builder/type";
+} from "../type/dom";
 import {
   StringPattern,
   matchString
