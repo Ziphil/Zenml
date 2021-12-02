@@ -14,7 +14,7 @@ import {
 import {
   ZenmlPluginLike,
   ZenmlPluginManager
-} from "./plugin";
+} from "./plugin-manager";
 import {
   StateParser,
   create,
