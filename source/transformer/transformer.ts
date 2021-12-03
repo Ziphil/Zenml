@@ -40,7 +40,7 @@ export class Transformer<D extends SuperDocumentLike<D>> {
     this.templateManager = new TransformTemplateManager();
     this.configs = {};
     this.variables = {};
-    this.lightTransformer = {configs: this.configs, variables: this.variables, apply: this.apply.bind(this), call: this.call.bind(this)};
+    this.lightTransformer = this.createLightTransformer();
   }
 
   public updateDocument(document?: D): void {
@@ -53,6 +53,16 @@ export class Transformer<D extends SuperDocumentLike<D>> {
 
   protected resetVariables(): void {
     this.variables = {};
+  }
+
+  protected createLightTransformer(): LightTransformer<D> {
+    let lightTransformer = {
+      configs: this.configs,
+      variables: this.variables,
+      apply: this.apply.bind(this),
+      call: this.call.bind(this)
+    };
+    return lightTransformer;
   }
 
   public registerElementRule(tagNamePattern: StringPattern, scopePattern: StringPattern, rule: TransformRule<D, Element>): void {
