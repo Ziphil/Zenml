@@ -155,7 +155,8 @@ export class ZenmlParser {
 
   public readonly element: StateParser<Nodes, ZenmlParserState> = create((state) => {
     let parser = seq(
-      this.tag
+      this.tag,
+      this.blank
     ).chain(([tagSpec]) => {
       let {tagName, marks, attributes, macro} = tagSpec;
       let nextState = this.determineNextState(state, tagName, marks, attributes, macro);
@@ -255,7 +256,7 @@ export class ZenmlParser {
   });
 
   public readonly childrenChain: StateParser<Array<Nodes>, ZenmlParserState> = create((state) => {
-    let parser = this.children(state).atLeast(1);
+    let parser = this.children(state).sepBy1(this.blank);
     return parser;
   });
 
@@ -278,8 +279,9 @@ export class ZenmlParser {
       Parsimmon.oneOf(ELEMENT_START + MACRO_START),
       this.identifier,
       this.marks,
+      this.blank,
       this.attributes.thru(maybe)
-    ).map(([startChar, tagName, marks, rawAttributes]) => {
+    ).map(([startChar, tagName, marks, , rawAttributes]) => {
       let macro = startChar === MACRO_START;
       let attributes = rawAttributes ?? new Map();
       return {tagName, marks, attributes, macro};
@@ -301,9 +303,11 @@ export class ZenmlParser {
   public readonly attributes: Parser<ZenmlAttributes> = lazy(() => {
     let parser = seq(
       Parsimmon.string(ATTRIBUTE_START),
+      this.blank,
       this.attribute.sepBy(seq(this.blank, Parsimmon.string(ATTRIBUTE_SEPARATOR), this.blank)),
+      this.blank,
       Parsimmon.string(ATTRIBUTE_END)
-    ).map(([, rawAttributes]) => {
+    ).map(([, , rawAttributes]) => {
       let attributes = new Map<string, string>();
       for (let {name, value} of rawAttributes) {
         attributes.set(name, value);

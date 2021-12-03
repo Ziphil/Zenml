@@ -52,6 +52,57 @@ describe("elements and texts", () => {
   });
 });
 
+describe("spaces in elements", () => {
+  test("after tags", () => {
+    shouldEquivalent(`\\element ;`, `<element/>`);
+    shouldEquivalent(`\\element  |attr="value"|;`, `<element attr="value"/>`);
+    shouldEquivalent(`\\element  <text>`, `<element>text</element>`);
+    shouldEquivalent(`\\element |attr="value"|<text>`, `<element attr="value">text</element>`);
+    shouldEquivalent(`\\element*  <text>`, `<element>text</element>`);
+  });
+  test("after attributes", () => {
+    shouldEquivalent(`\\element|attr="value"|  ;`, `<element attr="value"/>`);
+    shouldEquivalent(`\\element|attr="value"| <text>`, `<element attr="value">text</element>`);
+  });
+  test("inside attribute blocks", () => {
+    shouldEquivalent(`\\element|  attr="value"|;`, `<element attr="value"/>`);
+    shouldEquivalent(`\\element|attr="value" |;`, `<element attr="value"/>`);
+    shouldEquivalent(`\\element| attr="value" |;`, `<element attr="value"/>`);
+  });
+  test("around attribute commas", () => {
+    shouldEquivalent(`\\element|one="one", two="two"|;`, `<element one="one" two="two"/>`);
+    shouldEquivalent(`\\element|one="one"  ,two="two"|;`, `<element one="one" two="two"/>`);
+    shouldEquivalent(`\\element|one="one" ,  two="two" ,  three="three"|;`, `<element one="one" two="two" three="three"/>`);
+  });
+  test("around attribute equals", () => {
+    shouldEquivalent(`\\element|attr= "value"|;`, `<element attr="value"/>`);
+    shouldEquivalent(`\\element|attr  ="value"|;`, `<element attr="value"/>`);
+    shouldEquivalent(`\\element|attr =  "value"|;`, `<element attr="value"/>`);
+  });
+  test("between arguments", () => {
+    shouldEquivalent(`\\element+<one> <two>`, `<element>one</element><element>two</element>`);
+    shouldEquivalent(`\\element+<one> <two>   <three>`, `<element>one</element><element>two</element><element>three</element>`);
+  });
+  test("after slash (not allowed)", () => {
+    shouldFail(`\\  element;`);
+  });
+  test("between element name and mark (not allowed)", () => {
+    shouldFail(`\\element +;`);
+  });
+  test("complex", () => {
+    shouldEquivalent($`
+      \\element+ | foo= "foo" ,  bar = "bar" ,
+        baz =  "baz"
+        , qux  ="qux"
+      |
+      <one>
+        <two>
+    `, $`
+      <element foo="foo" bar="bar" baz="baz" qux="qux">one</element><element foo="foo" bar="bar" baz="baz" qux="qux">two</element>
+    `);
+  });
+});
+
 describe("special elements", () => {
   test("basic", () => {
     let options = {specialElementNames: {brace: "brace", bracket: "bracket", slash: "slash"}};
