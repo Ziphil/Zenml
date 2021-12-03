@@ -7,6 +7,7 @@ export * from "./parser/plugin";
 export * from "./simple-dom/document";
 export * from "./simple-dom/document-fragment";
 export * from "./simple-dom/element";
+export * from "./transformer/light-transformer";
 export * from "./transformer/template-manager";
 export * from "./transformer/transformer";
 export * from "./type/dom";

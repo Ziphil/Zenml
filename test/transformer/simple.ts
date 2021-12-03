@@ -6,6 +6,7 @@ import {
 import $ from "ts-dedent";
 import {
   SimpleDocument,
+  TransformTemplateManager,
   Transformer
 } from "../../source";
 
@@ -51,5 +52,58 @@ describe("transformation of simple documents", () => {
       });
       transformer.registerTextRule(true, (transformer, document, text) => text.data);
     });
+  });
+  test("call factories", () => {
+    shouldEquivalent($`
+      <foo>
+        <foo>text</foo>
+      </foo>
+    `, $`
+      <foo-tr>
+        <foo-tr>text<fac/></foo-tr>
+      <fac/></foo-tr>
+    `, (transformer) => {
+      transformer.registerElementRule("foo", true, (transformer, document, element) => {
+        let self = document.createDocumentFragment();
+        self.appendElement("foo-tr", (self) => {
+          self.appendChild(transformer.apply(element, ""));
+          self.appendChild(transformer.call(element, "fac"));
+        });
+        return self;
+      });
+      transformer.registerElementFactory("fac", (transformer, document, element) => {
+        let self = document.createDocumentFragment();
+        self.appendElement("fac");
+        return self;
+      });
+      transformer.registerTextRule(true, (transformer, document, text) => text.data);
+    });
+  });
+});
+
+describe("registration of templates", () => {
+  test("via template manager", () => {
+    let manager = new TransformTemplateManager<SimpleDocument>();
+    manager.registerElementRule("foo", true, (transformer, document, element) => {
+      let self = document.createDocumentFragment();
+      self.appendElement("foo-tr", (self) => {
+        self.appendChild(transformer.apply(element, ""));
+        self.appendChild(transformer.call(element, "fac"));
+      });
+      return self;
+    });
+    manager.registerElementFactory("fac", (transformer, document, element) => {
+      let self = document.createDocumentFragment();
+      self.appendElement("fac");
+      return self;
+    });
+    manager.registerTextRule(true, (transformer, document, text) => {
+      let self = document.createDocumentFragment();
+      self.appendTextNode(text.data);
+      self.appendChild(transformer.call(text, "textfac"));
+      return self;
+    });
+    manager.registerTextFactory("textfac", (transformer, document, text) => "textfac");
+    shouldEquivalent(`<foo>text</foo>`, `<foo-tr>texttextfac<fac/></foo-tr>`, (transformer) => transformer.regsiterTemplateManager(manager));
   });
 });
