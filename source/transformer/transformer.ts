@@ -13,9 +13,14 @@ import {
   isText
 } from "../util/dom";
 import {
+  StringPattern
+} from "../util/pattern";
+import {
   LightTransformer
 } from "./light-transformer";
 import {
+  TransformFactory,
+  TransformRule,
   TransformTemplateManager
 } from "./template-manager";
 
@@ -48,6 +53,26 @@ export class Transformer<D extends SuperDocumentLike<D>> {
 
   protected resetVariables(): void {
     this.variables = {};
+  }
+
+  public registerElementRule(tagNamePattern: StringPattern, scopePattern: StringPattern, rule: TransformRule<D, Element>): void {
+    this.templateManager.registerElementRule(tagNamePattern, scopePattern, rule);
+  }
+
+  public registerTextRule(scopePattern: StringPattern, rule: TransformRule<D, Text>): void {
+    this.templateManager.registerTextRule(scopePattern, rule);
+  }
+
+  public registerElementFactory(name: string, factory: TransformFactory<D, Element>): void {
+    this.templateManager.registerElementFactory(name, factory);
+  }
+
+  public registerTextFactory(name: string, factory: TransformFactory<D, Text>): void {
+    this.templateManager.registerTextFactory(name, factory);
+  }
+
+  public regsiterTemplateManager(manager: TransformTemplateManager<D>): void {
+    this.templateManager.regsiterTemplateManager(manager);
   }
 
   public transform(input: Document, document?: D): D {

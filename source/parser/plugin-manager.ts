@@ -21,14 +21,7 @@ export class ZenmlPluginManager {
   // プラグインを登録します。
   // 第 3 引数の parser にパーサーが渡されると、登録されるプラグインをそのパーサーで初期化します。
   public registerPlugin(name: string, plugin: ZenmlPluginLike, parser?: ZenmlParser): void {
-    if (plugin instanceof ZenmlPluginManager) {
-      for (let [addedName, addedPlugin] of plugin.plugins) {
-        this.plugins.set(addedName, addedPlugin);
-        if (parser !== undefined) {
-          addedPlugin.initialize(parser);
-        }
-      }
-    } else if (typeof plugin === "function") {
+    if (typeof plugin === "function") {
       let addedPlugin = new SimpleZenmlPlugin(plugin);
       this.plugins.set(name, addedPlugin);
       if (parser !== undefined) {
@@ -38,6 +31,15 @@ export class ZenmlPluginManager {
       this.plugins.set(name, plugin);
       if (parser !== undefined) {
         plugin.initialize(parser);
+      }
+    }
+  }
+
+  public registerPluginManager(manager: ZenmlPluginManager, parser?: ZenmlParser): void {
+    for (let [addedName, addedPlugin] of manager.plugins) {
+      this.plugins.set(addedName, addedPlugin);
+      if (parser !== undefined) {
+        addedPlugin.initialize(parser);
       }
     }
   }
@@ -53,4 +55,4 @@ export class ZenmlPluginManager {
 }
 
 
-export type ZenmlPluginLike = ZenmlPluginManager | ZenmlPluginFunction | ZenmlPlugin;
+export type ZenmlPluginLike = ZenmlPluginFunction | ZenmlPlugin;

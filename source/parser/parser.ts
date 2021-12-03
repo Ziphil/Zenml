@@ -100,6 +100,10 @@ export class ZenmlParser {
     this.pluginManager.registerPlugin(name, plugin, this);
   }
 
+  public registerPluginManager(manager: ZenmlPluginManager): void {
+    this.pluginManager.registerPluginManager(manager, this);
+  }
+
   public deregisterPlugin(name: string): void {
     this.pluginManager.deregisterPlugin(name);
   }
