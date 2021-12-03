@@ -41,6 +41,7 @@ export class Transformer<D extends SuperDocumentLike<D>> {
     this.configs = {};
     this.variables = {};
     this.lightTransformer = this.createLightTransformer();
+    this.resetConfigs();
   }
 
   public updateDocument(document?: D): void {
@@ -87,6 +88,7 @@ export class Transformer<D extends SuperDocumentLike<D>> {
 
   public transform(input: Document, document?: D): D {
     this.updateDocument(document);
+    this.resetVariables();
     this.document.appendChild(this.apply(input, ""));
     return this.document;
   }
