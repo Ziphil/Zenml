@@ -108,10 +108,6 @@ export class ZenmlParser {
     this.pluginManager.deregisterPlugin(name);
   }
 
-  public updateDocument(document?: Document): void {
-    this.document = document ?? this.implementation.createDocument(null, null, null);
-  }
-
   public tryParse(input: string, document?: Document): Document {
     this.updateDocument(document);
     return this.root.tryParse(input);
@@ -483,6 +479,10 @@ export class ZenmlParser {
     let parser = Parsimmon.oneOf(SPACE_CHAR_STRING).many().result(null);
     return parser;
   });
+
+  protected updateDocument(document?: Document): void {
+    this.document = document ?? this.implementation.createDocument(null, null, null);
+  }
 
   protected createElement(tagName: string, marks: ZenmlMarks, attributes: ZenmlAttributes, childrenArgs: ChildrenArgs): Nodes {
     if (marks.includes("instruction")) {

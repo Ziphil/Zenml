@@ -1,12 +1,8 @@
 //
 
 import {
-  DocumentFragmentOf,
-  DocumentLike,
-  ElementOf,
   NodeLikeOf,
-  SuperDocumentLike,
-  TextOf
+  SuperDocumentLike
 } from "../type/dom";
 import {
   isElement,
@@ -42,28 +38,6 @@ export class Transformer<D extends SuperDocumentLike<D>> {
     this.apply = this.apply.bind(this);
     this.call = this.call.bind(this);
     this.resetConfigs();
-  }
-
-  public updateDocument(document?: D): void {
-    this.document = document ?? this.implementation();
-  }
-
-  protected resetConfigs(): void {
-    this.configs = {};
-  }
-
-  protected resetVariables(): void {
-    this.variables = {};
-  }
-
-  protected createLightTransformer(currentNode: Element | Text, currentScope: string): LightTransformer<D> {
-    let lightTransformer = {
-      configs: this.configs,
-      variables: this.variables,
-      apply: (node, scope, args) => this.apply(node ?? currentNode, scope ?? currentScope, args),
-      call: (name, node, scope, args) => this.call(name, node ?? currentNode, scope ?? currentScope, args)
-    } as LightTransformer<D>;
-    return lightTransformer;
   }
 
   public registerElementRule(tagNamePattern: StringPattern, scopePattern: StringPattern, rule: TransformRule<D, Element>): void {
@@ -154,6 +128,28 @@ export class Transformer<D extends SuperDocumentLike<D>> {
     } else {
       return this.document.createDocumentFragment();
     }
+  }
+
+  protected updateDocument(document?: D): void {
+    this.document = document ?? this.implementation();
+  }
+
+  protected resetConfigs(): void {
+    this.configs = {};
+  }
+
+  protected resetVariables(): void {
+    this.variables = {};
+  }
+
+  protected createLightTransformer(currentNode: Element | Text, currentScope: string): LightTransformer<D> {
+    let lightTransformer = {
+      configs: this.configs,
+      variables: this.variables,
+      apply: (node, scope, args) => this.apply(node ?? currentNode, scope ?? currentScope, args),
+      call: (name, node, scope, args) => this.call(name, node ?? currentNode, scope ?? currentScope, args)
+    } as LightTransformer<D>;
+    return lightTransformer;
   }
 
 }

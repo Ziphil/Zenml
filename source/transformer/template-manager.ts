@@ -1,12 +1,8 @@
 //
 
 import {
-  DocumentFragmentOf,
-  DocumentLike,
-  ElementOf,
   NodeLikeOf,
-  SuperDocumentLike,
-  TextOf
+  SuperDocumentLike
 } from "../type/dom";
 import {
   StringPattern,
