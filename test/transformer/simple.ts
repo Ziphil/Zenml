@@ -67,7 +67,7 @@ describe("transformation of simple documents", () => {
         let self = document.createDocumentFragment();
         self.appendElement("foo-tr", (self) => {
           self.appendChild(transformer.apply(element, ""));
-          self.appendChild(transformer.call(element, "fac"));
+          self.appendChild(transformer.call("fac", element));
         });
         return self;
       });
@@ -88,7 +88,7 @@ describe("registration of templates", () => {
       let self = document.createDocumentFragment();
       self.appendElement("foo-tr", (self) => {
         self.appendChild(transformer.apply(element, ""));
-        self.appendChild(transformer.call(element, "fac"));
+        self.appendChild(transformer.call("fac", element));
       });
       return self;
     });
@@ -100,7 +100,7 @@ describe("registration of templates", () => {
     manager.registerTextRule(true, (transformer, document, text) => {
       let self = document.createDocumentFragment();
       self.appendTextNode(text.data);
-      self.appendChild(transformer.call(text, "textfac"));
+      self.appendChild(transformer.call("textfac", text));
       return self;
     });
     manager.registerTextFactory("textfac", (transformer, document, text) => "textfac");

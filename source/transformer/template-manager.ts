@@ -92,4 +92,4 @@ export class TransformTemplateManager<D extends SuperDocumentLike<D>> {
 
 
 export type TransformRule<D extends SuperDocumentLike<D>, N> = (transformer: LightTransformer<D>, document: D, node: N, scope: string, args: any) => NodeLikeOf<D>;
-export type TransformFactory<D extends SuperDocumentLike<D>, N> = (transformer: LightTransformer<D>, document: D, node: N, args: any) => NodeLikeOf<D>;
+export type TransformFactory<D extends SuperDocumentLike<D>, N> = (transformer: LightTransformer<D>, document: D, node: N, scope: string, args: any) => NodeLikeOf<D>;

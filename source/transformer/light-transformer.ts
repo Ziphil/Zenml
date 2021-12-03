@@ -11,8 +11,8 @@ export interface LightTransformer<D extends SuperDocumentLike<D>> {
   configs: {[key: string]: any};
   variables: {[key: string]: any};
 
-  call(node: Element | Text, name: string, args?: any): NodeLikeOf<D>;
-
   apply(node: Element | Document, scope: string, args?: any): NodeLikeOf<D>;
+
+  call(name: string, node: Element | Text, args?: any): NodeLikeOf<D>;
 
 }

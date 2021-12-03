@@ -124,29 +124,29 @@ export class Transformer<D extends SuperDocumentLike<D>> {
     }
   }
 
-  private call(node: Element | Text, name: string, args?: any): NodeLikeOf<D> {
+  private call(name: string, node: Element | Text, scope: string, args?: any): NodeLikeOf<D> {
     if (isElement(node)) {
-      return this.callElement(node, name, args);
+      return this.callElement(name, node, scope, args);
     } else if (isText(node)) {
-      return this.callText(node, name, args);
+      return this.callText(name, node, scope, args);
     } else {
       return this.document.createDocumentFragment();
     }
   }
 
-  private callElement(element: Element, name: string, args?: any): NodeLikeOf<D> {
+  private callElement(name: string, element: Element, scope: string, args?: any): NodeLikeOf<D> {
     let factory = this.templateManager.findElementFactory(name);
     if (factory !== null) {
-      return factory(this.lightTransformer, this.document, element, args);
+      return factory(this.lightTransformer, this.document, element, scope, args);
     } else {
       return this.document.createDocumentFragment();
     }
   }
 
-  private callText(text: Text, name: string, args?: any): NodeLikeOf<D> {
+  private callText(name: string, text: Text, scope: string, args?: any): NodeLikeOf<D> {
     let factory = this.templateManager.findTextFactory(name);
     if (factory !== null) {
-      return factory(this.lightTransformer, this.document, text, args);
+      return factory(this.lightTransformer, this.document, text, scope, args);
     } else {
       return this.document.createDocumentFragment();
     }
