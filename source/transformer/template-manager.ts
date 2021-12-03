@@ -5,18 +5,19 @@ import {
   DocumentLike,
   ElementOf,
   NodeLikeOf,
+  SuperDocumentLike,
   TextOf
 } from "../type/dom";
 import {
   StringPattern,
   matchString
 } from "../util/pattern";
-import type {
-  Transformer
-} from "./transformer";
+import {
+  LightTransformer
+} from "./light-transformer";
 
 
-export class TransformTemplateManager<D extends DocumentLike<DocumentFragmentOf<D>, ElementOf<D>, TextOf<D>>> {
+export class TransformTemplateManager<D extends SuperDocumentLike<D>> {
 
   private readonly elementRules: Array<[StringPattern, StringPattern, TransformRule<D, Element>]>;
   private readonly textRules: Array<[StringPattern, TransformRule<D, Text>]>;
@@ -90,5 +91,5 @@ export class TransformTemplateManager<D extends DocumentLike<DocumentFragmentOf<
 }
 
 
-export type TransformRule<D extends DocumentLike<any, any, any>, N> = (transformer: Transformer<D>, document: D, node: N, scope: string, args: any) => NodeLikeOf<D>;
-export type TransformFactory<D extends DocumentLike<any, any, any>, N> = (transformer: Transformer<D>, document: D, node: N, args: any) => NodeLikeOf<D>;
+export type TransformRule<D extends SuperDocumentLike<D>, N> = (transformer: LightTransformer<D>, document: D, node: N, scope: string, args: any) => NodeLikeOf<D>;
+export type TransformFactory<D extends SuperDocumentLike<D>, N> = (transformer: LightTransformer<D>, document: D, node: N, args: any) => NodeLikeOf<D>;

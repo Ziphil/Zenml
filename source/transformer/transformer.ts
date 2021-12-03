@@ -5,6 +5,7 @@ import {
   DocumentLike,
   ElementOf,
   NodeLikeOf,
+  SuperDocumentLike,
   TextOf
 } from "../type/dom";
 import {
@@ -12,15 +13,19 @@ import {
   isText
 } from "../util/dom";
 import {
+  LightTransformer
+} from "./light-transformer";
+import {
   TransformTemplateManager
 } from "./template-manager";
 
 
-export class Transformer<D extends DocumentLike<DocumentFragmentOf<D>, ElementOf<D>, TextOf<D>>> {
+export class Transformer<D extends SuperDocumentLike<D>> {
 
   public document: D;
   protected readonly implementation: () => D;
   protected readonly templateManager: TransformTemplateManager<D>;
+  protected readonly lightTransformer: LightTransformer<D>;
   protected configs: {[key: string]: any};
   protected variables: {[key: string]: any};
 
@@ -30,6 +35,7 @@ export class Transformer<D extends DocumentLike<DocumentFragmentOf<D>, ElementOf
     this.templateManager = new TransformTemplateManager();
     this.configs = {};
     this.variables = {};
+    this.lightTransformer = {configs: this.configs, variables: this.variables, apply: this.apply.bind(this), call: this.call.bind(this)};
   }
 
   public updateDocument(document?: D): void {
@@ -66,7 +72,7 @@ export class Transformer<D extends DocumentLike<DocumentFragmentOf<D>, ElementOf
   private applyElement(element: Element, scope: string, args?: any): NodeLikeOf<D> {
     let rule = this.templateManager.findElementRule(element.tagName, scope);
     if (rule !== null) {
-      return rule(this, this.document, element, scope, args);
+      return rule(this.lightTransformer, this.document, element, scope, args);
     } else {
       return this.document.createDocumentFragment();
     }
@@ -75,7 +81,7 @@ export class Transformer<D extends DocumentLike<DocumentFragmentOf<D>, ElementOf
   private applyText(text: Text, scope: string, args?: any): NodeLikeOf<D> {
     let rule = this.templateManager.findTextRule(scope);
     if (rule !== null) {
-      return rule(this, this.document, text, scope, args);
+      return rule(this.lightTransformer, this.document, text, scope, args);
     } else {
       return this.document.createDocumentFragment();
     }
@@ -94,7 +100,7 @@ export class Transformer<D extends DocumentLike<DocumentFragmentOf<D>, ElementOf
   private callElement(element: Element, name: string, args?: any): NodeLikeOf<D> {
     let factory = this.templateManager.findElementFactory(name);
     if (factory !== null) {
-      return factory(this, this.document, element, args);
+      return factory(this.lightTransformer, this.document, element, args);
     } else {
       return this.document.createDocumentFragment();
     }
@@ -103,7 +109,7 @@ export class Transformer<D extends DocumentLike<DocumentFragmentOf<D>, ElementOf
   private callText(text: Text, name: string, args?: any): NodeLikeOf<D> {
     let factory = this.templateManager.findTextFactory(name);
     if (factory !== null) {
-      return factory(this, this.document, text, args);
+      return factory(this.lightTransformer, this.document, text, args);
     } else {
       return this.document.createDocumentFragment();
     }
