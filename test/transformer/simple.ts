@@ -36,17 +36,17 @@ describe("transformation of simple documents", () => {
         <bar-tr><foo-tr/></bar-tr>
       </foo-tr>
     `, (transformer) => {
-      transformer.registerElementRule("foo", true, (transformer, document, element) => {
+      transformer.registerElementRule("foo", true, (transformer, document) => {
         let self = document.createDocumentFragment();
         self.appendElement("foo-tr", (self) => {
-          self.appendChild(transformer.apply(element, ""));
+          self.appendChild(transformer.apply());
         });
         return self;
       });
-      transformer.registerElementRule("bar", true, (transformer, document, element) => {
+      transformer.registerElementRule("bar", true, (transformer, document) => {
         let self = document.createDocumentFragment();
         self.appendElement("bar-tr", (self) => {
-          self.appendChild(transformer.apply(element, ""));
+          self.appendChild(transformer.apply());
         });
         return self;
       });
@@ -63,15 +63,15 @@ describe("transformation of simple documents", () => {
         <foo-tr>text<fac/></foo-tr>
       <fac/></foo-tr>
     `, (transformer) => {
-      transformer.registerElementRule("foo", true, (transformer, document, element) => {
+      transformer.registerElementRule("foo", true, (transformer, document) => {
         let self = document.createDocumentFragment();
         self.appendElement("foo-tr", (self) => {
-          self.appendChild(transformer.apply(element, ""));
-          self.appendChild(transformer.call("fac", element));
+          self.appendChild(transformer.apply());
+          self.appendChild(transformer.call("fac"));
         });
         return self;
       });
-      transformer.registerElementFactory("fac", (transformer, document, element) => {
+      transformer.registerElementFactory("fac", (transformer, document) => {
         let self = document.createDocumentFragment();
         self.appendElement("fac");
         return self;
@@ -84,15 +84,15 @@ describe("transformation of simple documents", () => {
 describe("registration of templates", () => {
   test("via template manager", () => {
     let manager = new TransformTemplateManager<SimpleDocument>();
-    manager.registerElementRule("foo", true, (transformer, document, element) => {
+    manager.registerElementRule("foo", true, (transformer, document) => {
       let self = document.createDocumentFragment();
       self.appendElement("foo-tr", (self) => {
-        self.appendChild(transformer.apply(element, ""));
-        self.appendChild(transformer.call("fac", element));
+        self.appendChild(transformer.apply());
+        self.appendChild(transformer.call("fac"));
       });
       return self;
     });
-    manager.registerElementFactory("fac", (transformer, document, element) => {
+    manager.registerElementFactory("fac", (transformer, document) => {
       let self = document.createDocumentFragment();
       self.appendElement("fac");
       return self;
@@ -100,10 +100,10 @@ describe("registration of templates", () => {
     manager.registerTextRule(true, (transformer, document, text) => {
       let self = document.createDocumentFragment();
       self.appendTextNode(text.data);
-      self.appendChild(transformer.call("textfac", text));
+      self.appendChild(transformer.call("textfac"));
       return self;
     });
-    manager.registerTextFactory("textfac", (transformer, document, text) => "textfac");
+    manager.registerTextFactory("textfac", () => "textfac");
     shouldEquivalent(`<foo>text</foo>`, `<foo-tr>texttextfac<fac/></foo-tr>`, (transformer) => transformer.regsiterTemplateManager(manager));
   });
 });

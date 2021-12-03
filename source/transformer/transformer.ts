@@ -30,7 +30,6 @@ export class Transformer<D extends SuperDocumentLike<D>> {
   public document: D;
   protected readonly implementation: () => D;
   protected readonly templateManager: TransformTemplateManager<D>;
-  protected readonly lightTransformer: LightTransformer<D>;
   protected configs: {[key: string]: any};
   protected variables: {[key: string]: any};
 
@@ -40,7 +39,8 @@ export class Transformer<D extends SuperDocumentLike<D>> {
     this.templateManager = new TransformTemplateManager();
     this.configs = {};
     this.variables = {};
-    this.lightTransformer = this.createLightTransformer();
+    this.apply = this.apply.bind(this);
+    this.call = this.call.bind(this);
     this.resetConfigs();
   }
 
@@ -56,13 +56,13 @@ export class Transformer<D extends SuperDocumentLike<D>> {
     this.variables = {};
   }
 
-  protected createLightTransformer(): LightTransformer<D> {
+  protected createLightTransformer(currentNode: Element | Text, currentScope: string): LightTransformer<D> {
     let lightTransformer = {
       configs: this.configs,
       variables: this.variables,
-      apply: this.apply.bind(this),
-      call: this.call.bind(this)
-    };
+      apply: (node, scope, args) => this.apply(node ?? currentNode, scope ?? currentScope, args),
+      call: (name, node, scope, args) => this.call(name, node ?? currentNode, scope ?? currentScope, args)
+    } as LightTransformer<D>;
     return lightTransformer;
   }
 
@@ -93,7 +93,7 @@ export class Transformer<D extends SuperDocumentLike<D>> {
     return this.document;
   }
 
-  private apply(node: Element | Document, scope: string, args?: any): NodeLikeOf<D> {
+  private apply(node: Document | Element | Text, scope: string, args?: any): NodeLikeOf<D> {
     let resultNode = this.document.createDocumentFragment();
     for (let i = 0 ; i < node.childNodes.length ; i ++) {
       let child = node.childNodes.item(i);
@@ -109,7 +109,8 @@ export class Transformer<D extends SuperDocumentLike<D>> {
   private applyElement(element: Element, scope: string, args?: any): NodeLikeOf<D> {
     let rule = this.templateManager.findElementRule(element.tagName, scope);
     if (rule !== null) {
-      return rule(this.lightTransformer, this.document, element, scope, args);
+      let lightTransformer = this.createLightTransformer(element, scope);
+      return rule(lightTransformer, this.document, element, scope, args);
     } else {
       return this.document.createDocumentFragment();
     }
@@ -118,7 +119,8 @@ export class Transformer<D extends SuperDocumentLike<D>> {
   private applyText(text: Text, scope: string, args?: any): NodeLikeOf<D> {
     let rule = this.templateManager.findTextRule(scope);
     if (rule !== null) {
-      return rule(this.lightTransformer, this.document, text, scope, args);
+      let lightTransformer = this.createLightTransformer(text, scope);
+      return rule(lightTransformer, this.document, text, scope, args);
     } else {
       return this.document.createDocumentFragment();
     }
@@ -137,7 +139,8 @@ export class Transformer<D extends SuperDocumentLike<D>> {
   private callElement(name: string, element: Element, scope: string, args?: any): NodeLikeOf<D> {
     let factory = this.templateManager.findElementFactory(name);
     if (factory !== null) {
-      return factory(this.lightTransformer, this.document, element, scope, args);
+      let lightTransformer = this.createLightTransformer(element, scope);
+      return factory(lightTransformer, this.document, element, scope, args);
     } else {
       return this.document.createDocumentFragment();
     }
@@ -146,7 +149,8 @@ export class Transformer<D extends SuperDocumentLike<D>> {
   private callText(name: string, text: Text, scope: string, args?: any): NodeLikeOf<D> {
     let factory = this.templateManager.findTextFactory(name);
     if (factory !== null) {
-      return factory(this.lightTransformer, this.document, text, scope, args);
+      let lightTransformer = this.createLightTransformer(text, scope);
+      return factory(lightTransformer, this.document, text, scope, args);
     } else {
       return this.document.createDocumentFragment();
     }
