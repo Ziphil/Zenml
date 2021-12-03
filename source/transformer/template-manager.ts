@@ -10,7 +10,7 @@ import {
 import {
   StringPattern,
   matchString
-} from "./pattern";
+} from "../util/pattern";
 import type {
   Transformer
 } from "./transformer";
