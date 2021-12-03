@@ -7,11 +7,11 @@ import {
 import {
   ChildrenArgs,
   Nodes,
-  SimpleZenmlPlugin,
   ZenmlAttributes,
   ZenmlMarks,
   ZenmlParser,
-  ZenmlPlugin
+  ZenmlPlugin,
+  ZenmlPluginManager
 } from "../../source";
 import {
   shouldEquivalent,
@@ -76,5 +76,17 @@ describe("macros and plugins", () => {
         return [element];
       });
     });
+  });
+});
+
+describe("registration of plugins", () => {
+  test("via plugin manager", () => {
+    let manager = new ZenmlPluginManager();
+    manager.registerPlugin("macro", new TestZenmlPlugin());
+    manager.registerPlugin("func", (builder, tagName, marks, attributes, childrenArgs) => {
+      let element = builder.createElement(tagName);
+      return [element];
+    });
+    shouldEquivalent(`&macro<42>&func<inner>`, `<macro><digits>42</digits></macro><func/>`, {}, (parser) => parser.registerPluginManager(manager));
   });
 });
