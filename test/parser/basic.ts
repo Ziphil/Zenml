@@ -167,7 +167,7 @@ describe("marks", () => {
 describe("macros", () => {
   test("unregistered macros", () => {
     let plugin = new SimpleZenmlPlugin(() => []);
-    shouldFail(`&unregistered<42>`, {}, [["macro", plugin]]);
+    shouldFail(`&unregistered<42>`, {}, (parser) => parser.registerPlugin("macro", plugin));
   });
 });
 

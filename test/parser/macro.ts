@@ -55,26 +55,26 @@ class TestZenmlPlugin implements ZenmlPlugin {
 describe("macros and plugins", () => {
   test("test plugin", () => {
     let plugin = new TestZenmlPlugin();
-    shouldEquivalent(`&macro<42>`, `<macro><digits>42</digits></macro>`, {}, [["macro", plugin]]);
-    shouldEquivalent(`&macro<100><200>`, `<macro><digits>100</digits></macro>`, {}, [["macro", plugin]]);
-    shouldFail(`&macro<nondigits>`, {}, [["macro", plugin]]);
+    shouldEquivalent(`&macro<42>`, `<macro><digits>42</digits></macro>`, {}, (parser) => parser.registerPlugin("macro", plugin));
+    shouldEquivalent(`&macro<100><200>`, `<macro><digits>100</digits></macro>`, {}, (parser) => parser.registerPlugin("macro", plugin));
+    shouldFail(`&macro<nondigits>`, {}, (parser) => parser.registerPlugin("macro", plugin));
   });
   test("simple plugin", () => {
-    let plugin = new SimpleZenmlPlugin((builder, tagName, marks, attributes, childrenArgs) => {
-      let element = builder.createElement("tr");
-      for (let [attributeName, attributeValue] of attributes) {
-        element.setAttribute(attributeName, attributeValue);
-      }
-      for (let children of childrenArgs) {
-        let innerElement = builder.createElement("td");
-        for (let child of children) {
-          innerElement.appendChild(child);
+    shouldEquivalent(`&tr<one\\elem<inner>><two\\elem;>`, `<tr><td>one<elem>inner</elem></td><td>two<elem/></td></tr>`, {}, (parser) => {
+      parser.registerPlugin("tr", (builder, tagName, marks, attributes, childrenArgs) => {
+        let element = builder.createElement("tr");
+        for (let [attributeName, attributeValue] of attributes) {
+          element.setAttribute(attributeName, attributeValue);
         }
-        element.appendChild(innerElement);
-      }
-      return [element];
+        for (let children of childrenArgs) {
+          let innerElement = builder.createElement("td");
+          for (let child of children) {
+            innerElement.appendChild(child);
+          }
+          element.appendChild(innerElement);
+        }
+        return [element];
+      });
     });
-    shouldEquivalent(`&tr<one><two><three>`, `<tr><td>one</td><td>two</td><td>three</td></tr>`, {}, [["tr", plugin]]);
-    shouldEquivalent(`&tr<one\\elem<inner>><two\\elem;>`, `<tr><td>one<elem>inner</elem></td><td>two<elem/></td></tr>`, {}, [["tr", plugin]]);
   });
 });
