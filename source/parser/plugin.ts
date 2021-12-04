@@ -17,11 +17,15 @@ import type {
 
 export interface ZenmlPlugin {
 
-  // このプラグインを ZenML パーサーに登録したときに一度だけ呼び出されます。
+  // Called once when this plugin is registered to the ZenML parser.
   initialize(zenmlParser: ZenmlParser): void;
 
-  // マクロの引数をパースするパーサーを返します。
-  // ZenML ドキュメントのパース処理中でマクロに出会う度に呼び出されます。
+  // Called every time the document in the ZenML parser is updated.
+  // Make sure that all the nodes returned by this plugin belong to this document.
+  updateDocument(document: Document): void;
+
+  // Returns the parser that parses each argument of the macro.
+  // Called every time the ZenML parser visits a macro tag during the parsing process of a ZenML document.
   getParser(): Parser<Nodes>;
 
   createElement(tagName: string, marks: ZenmlMarks, attributes: ZenmlAttributes, childrenArgs: ChildrenArgs): Nodes;
@@ -29,7 +33,7 @@ export interface ZenmlPlugin {
 }
 
 
-export class SimpleZenmlPlugin {
+export class SimpleZenmlPlugin implements ZenmlPlugin {
 
   private zenmlParser!: ZenmlParser;
   private builder!: DocumentBuilder;
@@ -41,7 +45,10 @@ export class SimpleZenmlPlugin {
 
   public initialize(zenmlParser: ZenmlParser): void {
     this.zenmlParser = zenmlParser;
-    this.builder = new DocumentBuilder(zenmlParser.document);
+  }
+
+  public updateDocument(document: Document): void {
+    this.builder = new DocumentBuilder(document);
   }
 
   public getParser(): Parser<Nodes> {

@@ -60,8 +60,8 @@ export class DocumentTransformer<D extends SuperDocumentLike<D>> {
     this.templateManager.regsiterTemplateManager(manager);
   }
 
-  public transform(input: Document, document?: D): D {
-    this.updateDocument(document);
+  public transform(input: Document): D {
+    this.updateDocument();
     this.resetVariables();
     this.document.appendChild(this.apply(input, ""));
     return this.document;
@@ -130,8 +130,8 @@ export class DocumentTransformer<D extends SuperDocumentLike<D>> {
     }
   }
 
-  protected updateDocument(document?: D): void {
-    this.document = document ?? this.implementation();
+  protected updateDocument(): void {
+    this.document = this.implementation();
   }
 
   protected resetConfigs(): void {

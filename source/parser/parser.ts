@@ -104,8 +104,8 @@ export class ZenmlParser {
     this.pluginManager.registerPluginManager(manager, this);
   }
 
-  public tryParse(input: string, document?: Document): Document {
-    this.updateDocument(document);
+  public tryParse(input: string): Document {
+    this.updateDocument();
     return this.root.tryParse(input);
   }
 
@@ -476,8 +476,10 @@ export class ZenmlParser {
     return parser;
   });
 
-  protected updateDocument(document?: Document): void {
-    this.document = document ?? this.implementation.createDocument(null, null, null);
+  protected updateDocument(): void {
+    let document = this.implementation.createDocument(null, null, null);
+    this.document = document;
+    this.pluginManager.updateDocument(this.document);
   }
 
   protected createElement(tagName: string, marks: ZenmlMarks, attributes: ZenmlAttributes, childrenArgs: ChildrenArgs): Nodes {

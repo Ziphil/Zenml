@@ -24,7 +24,10 @@ class TestZenmlPlugin implements ZenmlPlugin {
   private document!: Document;
 
   public initialize(zenmlParser: ZenmlParser): void {
-    this.document = zenmlParser.document;
+  }
+
+  public updateDocument(document: Document): void {
+    this.document = document;
   }
 
   public getParser(): Parser<Nodes> {

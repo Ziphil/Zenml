@@ -18,8 +18,8 @@ export class ZenmlPluginManager {
     this.plugins = new Map();
   }
 
-  // プラグインを登録します。
-  // 第 3 引数の parser にパーサーが渡されると、登録されるプラグインをそのパーサーで初期化します。
+  // Registers a plugin.
+  // If a parser is passed as the third argument, the plugin to be registered will be initialized with the parser.
   public registerPlugin(name: string, plugin: ZenmlPluginLike, parser?: ZenmlParser): void {
     if (typeof plugin === "function") {
       let addedPlugin = new SimpleZenmlPlugin(plugin);
@@ -41,6 +41,12 @@ export class ZenmlPluginManager {
       if (parser !== undefined) {
         addedPlugin.initialize(parser);
       }
+    }
+  }
+
+  public updateDocument(document: Document): void {
+    for (let [, plugin] of this.plugins) {
+      plugin.updateDocument(document);
     }
   }
 
