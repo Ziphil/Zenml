@@ -5,16 +5,16 @@ import {
 } from "../simple-dom/document";
 import {
   DocumentFragmentOf,
-  DocumentLike,
   ElementOf,
   NodeCallback,
   NodeLikeOf,
   ParentNodeLikeOf,
+  SuperDocumentLike,
   TextOf
 } from "../type/dom";
 
 
-export class BaseDocumentBuilder<D extends DocumentLike<DocumentFragmentOf<D>, ElementOf<D>, TextOf<D>>> {
+export class BaseDocumentBuilder<D extends SuperDocumentLike<D>> {
 
   protected readonly document!: D;
 
