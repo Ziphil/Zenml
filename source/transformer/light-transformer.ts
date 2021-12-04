@@ -6,7 +6,7 @@ import {
 } from "../type/dom";
 
 
-export interface LightTransformer<D extends SuperDocumentLike<D>> {
+export interface LightDocumentTransformer<D extends SuperDocumentLike<D>> {
 
   configs: {[key: string]: any};
   variables: {[key: string]: any};

@@ -5,21 +5,21 @@ import {
 } from "@xmldom/xmldom";
 import $ from "ts-dedent";
 import {
-  SimpleDocument,
-  TransformTemplateManager,
-  Transformer
+  DocumentTemplateManager,
+  DocumentTransformer,
+  SimpleDocument
 } from "../../source";
 
 
-function createTransformer(callback?: (transformer: Transformer<SimpleDocument>) => unknown): Transformer<SimpleDocument> {
-  let transformer = new Transformer(() => new SimpleDocument());
+function createTransformer(callback?: (transformer: DocumentTransformer<SimpleDocument>) => unknown): DocumentTransformer<SimpleDocument> {
+  let transformer = new DocumentTransformer(() => new SimpleDocument());
   if (callback !== undefined) {
     callback(transformer);
   }
   return transformer;
 }
 
-export function shouldEquivalent(input: string, output: string, callback?: (transformer: Transformer<SimpleDocument>) => unknown): void {
+export function shouldEquivalent(input: string, output: string, callback?: (transformer: DocumentTransformer<SimpleDocument>) => unknown): void {
   let parser = new DOMParser();
   let transformer = createTransformer(callback);
   expect(transformer.transform(parser.parseFromString(input)).toString()).toBe(output);
@@ -83,7 +83,7 @@ describe("transformation of simple documents", () => {
 
 describe("registration of templates", () => {
   test("via template manager", () => {
-    let manager = new TransformTemplateManager<SimpleDocument>();
+    let manager = new DocumentTemplateManager<SimpleDocument>();
     manager.registerElementRule("foo", true, (transformer, document) => {
       let self = document.createDocumentFragment();
       self.appendElement("foo-tr", (self) => {

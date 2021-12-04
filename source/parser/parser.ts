@@ -104,10 +104,6 @@ export class ZenmlParser {
     this.pluginManager.registerPluginManager(manager, this);
   }
 
-  public deregisterPlugin(name: string): void {
-    this.pluginManager.deregisterPlugin(name);
-  }
-
   public tryParse(input: string, document?: Document): Document {
     this.updateDocument(document);
     return this.root.tryParse(input);

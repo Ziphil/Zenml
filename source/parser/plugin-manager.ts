@@ -44,10 +44,6 @@ export class ZenmlPluginManager {
     }
   }
 
-  public deregisterPlugin(name: string): void {
-    this.plugins.delete(name);
-  }
-
   public getPlugin(name: string): ZenmlPlugin | null {
     return this.plugins.get(name) ?? null;
   }
