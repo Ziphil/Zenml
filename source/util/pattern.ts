@@ -11,7 +11,7 @@ export function matchString(string: string, pattern: StringPattern): boolean {
   } else if (typeof pattern === "function") {
     return pattern(string);
   } else {
-    return pattern.every((eachPattern) => matchString(string, eachPattern));
+    return pattern.some((eachPattern) => matchString(string, eachPattern));
   }
 }
 
