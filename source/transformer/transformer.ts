@@ -57,7 +57,7 @@ export abstract class BaseTransformer<D extends SuperDocumentLike<D>, C = AnyObj
     this.templateManager.regsiterTemplateManager(manager);
   }
 
-  public transform(input: Document, variables?: any): D {
+  public transform(input: Document, variables?: V): D {
     this.updateDocument();
     this.resetVariables(variables);
     this.document.appendChild(this.apply(input, ""));
