@@ -60,14 +60,14 @@ export class DocumentTransformer<D extends SuperDocumentLike<D>> {
     this.templateManager.regsiterTemplateManager(manager);
   }
 
-  public transform(input: Document): D {
+  public transform(input: Document, variables?: any): D {
     this.updateDocument();
-    this.resetVariables();
+    this.resetVariables(variables);
     this.document.appendChild(this.apply(input, ""));
     return this.document;
   }
 
-  protected apply(node: Document | Element | Text, scope: string, args?: any): NodeLikeOf<D> {
+  private apply(node: Document | Element | Text, scope: string, args?: any): NodeLikeOf<D> {
     let resultNode = this.document.createDocumentFragment();
     for (let i = 0 ; i < node.childNodes.length ; i ++) {
       let child = node.childNodes.item(i);
@@ -80,7 +80,7 @@ export class DocumentTransformer<D extends SuperDocumentLike<D>> {
     return resultNode;
   }
 
-  protected applyElement(element: Element, scope: string, args?: any): NodeLikeOf<D> {
+  private applyElement(element: Element, scope: string, args?: any): NodeLikeOf<D> {
     let rule = this.templateManager.findElementRule(element.tagName, scope);
     if (rule !== null) {
       let lightTransformer = this.createLightTransformer(element, scope);
@@ -90,7 +90,7 @@ export class DocumentTransformer<D extends SuperDocumentLike<D>> {
     }
   }
 
-  protected applyText(text: Text, scope: string, args?: any): NodeLikeOf<D> {
+  private applyText(text: Text, scope: string, args?: any): NodeLikeOf<D> {
     let rule = this.templateManager.findTextRule(scope);
     if (rule !== null) {
       let lightTransformer = this.createLightTransformer(text, scope);
@@ -100,7 +100,7 @@ export class DocumentTransformer<D extends SuperDocumentLike<D>> {
     }
   }
 
-  protected call(name: string, node: Element | Text, scope: string, args?: any): NodeLikeOf<D> {
+  private call(name: string, node: Element | Text, scope: string, args?: any): NodeLikeOf<D> {
     if (isElement(node)) {
       return this.callElement(name, node, scope, args);
     } else if (isText(node)) {
@@ -110,7 +110,7 @@ export class DocumentTransformer<D extends SuperDocumentLike<D>> {
     }
   }
 
-  protected callElement(name: string, element: Element, scope: string, args?: any): NodeLikeOf<D> {
+  private callElement(name: string, element: Element, scope: string, args?: any): NodeLikeOf<D> {
     let factory = this.templateManager.findElementFactory(name);
     if (factory !== null) {
       let lightTransformer = this.createLightTransformer(element, scope);
@@ -120,7 +120,7 @@ export class DocumentTransformer<D extends SuperDocumentLike<D>> {
     }
   }
 
-  protected callText(name: string, text: Text, scope: string, args?: any): NodeLikeOf<D> {
+  private callText(name: string, text: Text, scope: string, args?: any): NodeLikeOf<D> {
     let factory = this.templateManager.findTextFactory(name);
     if (factory !== null) {
       let lightTransformer = this.createLightTransformer(text, scope);
@@ -138,8 +138,8 @@ export class DocumentTransformer<D extends SuperDocumentLike<D>> {
     this.configs = {};
   }
 
-  protected resetVariables(): void {
-    this.variables = {};
+  protected resetVariables(variables?: any): void {
+    this.variables = variables ?? {};
   }
 
   protected createLightTransformer(currentNode: Element | Text, currentScope: string): LightDocumentTransformer<D> {
