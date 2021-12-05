@@ -6,10 +6,10 @@ import {
 } from "../type/dom";
 
 
-export interface LightDocumentTransformer<D extends SuperDocumentLike<D>> {
+export interface LightTransformer<D extends SuperDocumentLike<D>, C, V> {
 
-  configs: {[key: string]: any};
-  variables: {[key: string]: any};
+  configs: C;
+  variables: V;
 
   apply(node?: Element, scope?: string, args?: any): NodeLikeOf<D>;
 

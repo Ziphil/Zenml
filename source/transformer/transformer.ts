@@ -12,51 +12,48 @@ import {
   StringPattern
 } from "../util/pattern";
 import {
-  LightDocumentTransformer
+  LightTransformer
 } from "./light-transformer";
 import {
-  DocumentTemplateFactory,
-  DocumentTemplateManager,
-  DocumentTemplateRule
+  TemplateFactory,
+  TemplateManager,
+  TemplateRule
 } from "./template-manager";
 
 
-export class DocumentTransformer<D extends SuperDocumentLike<D>> {
+export abstract class BaseTransformer<D extends SuperDocumentLike<D>, C = AnyObject, V = AnyObject> {
 
   public document: D;
   protected readonly implementation: () => D;
-  protected readonly templateManager: DocumentTemplateManager<D>;
-  protected configs: {[key: string]: any};
-  protected variables: {[key: string]: any};
+  protected readonly templateManager: TemplateManager<D, C, V>;
+  protected configs!: C;
+  protected variables!: V;
 
   public constructor(implementation: () => D) {
     this.document = implementation();
     this.implementation = implementation;
-    this.templateManager = new DocumentTemplateManager();
-    this.configs = {};
-    this.variables = {};
-    this.apply = this.apply.bind(this);
-    this.call = this.call.bind(this);
+    this.templateManager = new TemplateManager();
     this.resetConfigs();
+    this.resetVariables();
   }
 
-  public registerElementRule(tagNamePattern: StringPattern, scopePattern: StringPattern, rule: DocumentTemplateRule<D, Element>): void {
+  public registerElementRule(tagNamePattern: StringPattern, scopePattern: StringPattern, rule: TemplateRule<D, C, V, Element>): void {
     this.templateManager.registerElementRule(tagNamePattern, scopePattern, rule);
   }
 
-  public registerTextRule(scopePattern: StringPattern, rule: DocumentTemplateRule<D, Text>): void {
+  public registerTextRule(scopePattern: StringPattern, rule: TemplateRule<D, C, V, Text>): void {
     this.templateManager.registerTextRule(scopePattern, rule);
   }
 
-  public registerElementFactory(name: string, factory: DocumentTemplateFactory<D, Element>): void {
+  public registerElementFactory(name: string, factory: TemplateFactory<D, C, V, Element>): void {
     this.templateManager.registerElementFactory(name, factory);
   }
 
-  public registerTextFactory(name: string, factory: DocumentTemplateFactory<D, Text>): void {
+  public registerTextFactory(name: string, factory: TemplateFactory<D, C, V, Text>): void {
     this.templateManager.registerTextFactory(name, factory);
   }
 
-  public regsiterTemplateManager(manager: DocumentTemplateManager<D>): void {
+  public regsiterTemplateManager(manager: TemplateManager<D, C, V>): void {
     this.templateManager.regsiterTemplateManager(manager);
   }
 
@@ -134,22 +131,36 @@ export class DocumentTransformer<D extends SuperDocumentLike<D>> {
     this.document = this.implementation();
   }
 
-  protected resetConfigs(): void {
-    this.configs = {};
-  }
+  protected abstract resetConfigs(): void;
 
-  protected resetVariables(variables?: any): void {
-    this.variables = variables ?? {};
-  }
+  protected abstract resetVariables(variables?: V): void;
 
-  protected createLightTransformer(currentNode: Element | Text, currentScope: string): LightDocumentTransformer<D> {
-    let lightTransformer = {
-      configs: this.configs,
-      variables: this.variables,
-      apply: (node, scope, args) => this.apply(node ?? currentNode, scope ?? currentScope, args),
-      call: (name, node, scope, args) => this.call(name, node ?? currentNode, scope ?? currentScope, args)
-    } as LightDocumentTransformer<D>;
+  protected createLightTransformer(currentNode: Element | Text, currentScope: string): LightTransformer<D, C, V> {
+    let outerThis = this;
+    let apply = function (node?: Element, scope?: string, args?: any): NodeLikeOf<D> {
+      return outerThis.apply(node ?? currentNode, scope ?? currentScope, args);
+    };
+    let call = function (name: string, node?: Element | Text, scope?: string, args?: any): NodeLikeOf<D> {
+      return outerThis.call(name, node ?? currentNode, scope ?? currentScope, args);
+    };
+    let lightTransformer = {configs: this.configs, variables: this.variables, apply, call};
     return lightTransformer;
   }
 
 }
+
+
+export class SimpleTransformer<D extends SuperDocumentLike<D>> extends BaseTransformer<D, AnyObject, AnyObject> {
+
+  protected resetConfigs(): void {
+    this.configs = {};
+  }
+
+  protected resetVariables(variables?: AnyObject): void {
+    this.variables = variables ?? {};
+  }
+
+}
+
+
+export type AnyObject = {[key: string]: any};
