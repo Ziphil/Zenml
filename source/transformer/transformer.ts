@@ -26,14 +26,14 @@ export abstract class BaseTransformer<D extends SuperDocumentLike<D>, C = AnyObj
   public document: D;
   protected readonly implementation: () => D;
   protected readonly templateManager: TemplateManager<D, C, V>;
-  protected configs!: C;
+  protected environments!: C;
   protected variables!: V;
 
   public constructor(implementation: () => D) {
     this.document = implementation();
     this.implementation = implementation;
     this.templateManager = new TemplateManager();
-    this.resetConfigs();
+    this.resetEnvironments();
     this.resetVariables();
   }
 
@@ -131,7 +131,7 @@ export abstract class BaseTransformer<D extends SuperDocumentLike<D>, C = AnyObj
     this.document = this.implementation();
   }
 
-  protected abstract resetConfigs(): void;
+  protected abstract resetEnvironments(): void;
 
   protected abstract resetVariables(variables?: V): void;
 
@@ -143,7 +143,7 @@ export abstract class BaseTransformer<D extends SuperDocumentLike<D>, C = AnyObj
     let call = function (name: string, node?: Element | Text, scope?: string, args?: any): NodeLikeOf<D> {
       return outerThis.call(name, node ?? currentNode, scope ?? currentScope, args);
     };
-    let lightTransformer = {configs: this.configs, variables: this.variables, apply, call};
+    let lightTransformer = {environments: this.environments, variables: this.variables, apply, call};
     return lightTransformer;
   }
 
@@ -152,8 +152,8 @@ export abstract class BaseTransformer<D extends SuperDocumentLike<D>, C = AnyObj
 
 export class SimpleTransformer<D extends SuperDocumentLike<D>> extends BaseTransformer<D, AnyObject, AnyObject> {
 
-  protected resetConfigs(): void {
-    this.configs = {};
+  protected resetEnvironments(): void {
+    this.environments = {};
   }
 
   protected resetVariables(variables?: AnyObject): void {

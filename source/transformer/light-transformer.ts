@@ -8,7 +8,7 @@ import {
 
 export interface LightTransformer<D extends SuperDocumentLike<D>, C, V> {
 
-  configs: C;
+  environments: C;
   variables: V;
 
   apply(node?: Element, scope?: string, args?: any): NodeLikeOf<D>;
