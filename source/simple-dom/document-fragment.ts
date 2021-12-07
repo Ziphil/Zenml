@@ -47,6 +47,14 @@ export class BaseDocumentFragment<D extends BaseDocument<D, F, E>, F extends Bas
     return text;
   }
 
+  public toString(): string {
+    let string = "";
+    for (let node of this.nodes) {
+      string += node.toString();
+    }
+    return string;
+  }
+
 }
 
 
