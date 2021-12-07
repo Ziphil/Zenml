@@ -21,6 +21,17 @@ import {
 } from "./template-manager";
 
 
+export type BaseTransformerOptions<D, C, V> = {
+  initialEnvironments?: C,
+  initialVariables?: V
+};
+export type BaseTransformerTransformOptions<D, C, V> = {
+  initialScope?: string,
+  initialVariables?: V
+};
+export type AnyObject = {[key: string]: any};
+
+
 export abstract class BaseTransformer<D extends SuperDocumentLike<D>, C = AnyObject, V = AnyObject> {
 
   public document: D;
@@ -29,12 +40,12 @@ export abstract class BaseTransformer<D extends SuperDocumentLike<D>, C = AnyObj
   protected environments!: C;
   protected variables!: V;
 
-  public constructor(implementation: () => D) {
+  public constructor(implementation: () => D, options?: BaseTransformerOptions<D, C, V>) {
     this.document = implementation();
     this.implementation = implementation;
     this.templateManager = new TemplateManager();
-    this.resetEnvironments();
-    this.resetVariables();
+    this.resetEnvironments(options?.initialEnvironments);
+    this.resetVariables(options?.initialVariables);
   }
 
   public registerElementRule(tagNamePattern: StringPattern, scopePattern: StringPattern, rule: TemplateRule<D, C, V, Element>): void {
@@ -57,10 +68,11 @@ export abstract class BaseTransformer<D extends SuperDocumentLike<D>, C = AnyObj
     this.templateManager.regsiterTemplateManager(manager);
   }
 
-  public transform(input: Document, variables?: V): D {
+  public transform(input: Document, options?: BaseTransformerTransformOptions<D, C, V>): D {
+    let initialScope = options?.initialScope ?? "";
     this.updateDocument();
-    this.resetVariables(variables);
-    this.document.appendChild(this.apply(input, ""));
+    this.resetVariables(options?.initialVariables);
+    this.document.appendChild(this.apply(input, initialScope));
     return this.document;
   }
 
@@ -131,9 +143,9 @@ export abstract class BaseTransformer<D extends SuperDocumentLike<D>, C = AnyObj
     this.document = this.implementation();
   }
 
-  protected abstract resetEnvironments(): void;
+  protected abstract resetEnvironments(initialEnvironments?: C): void;
 
-  protected abstract resetVariables(variables?: V): void;
+  protected abstract resetVariables(initialVariables?: V): void;
 
   protected createLightTransformer(currentNode: Element | Text, currentScope: string): LightTransformer<D, C, V> {
     let outerThis = this;
@@ -152,15 +164,12 @@ export abstract class BaseTransformer<D extends SuperDocumentLike<D>, C = AnyObj
 
 export class SimpleTransformer<D extends SuperDocumentLike<D>> extends BaseTransformer<D, AnyObject, AnyObject> {
 
-  protected resetEnvironments(): void {
-    this.environments = {};
+  protected resetEnvironments(initialEnvironments?: AnyObject): void {
+    this.environments = initialEnvironments ?? {};
   }
 
-  protected resetVariables(variables?: AnyObject): void {
-    this.variables = variables ?? {};
+  protected resetVariables(initialVariables?: AnyObject): void {
+    this.variables = initialVariables ?? {};
   }
 
 }
-
-
-export type AnyObject = {[key: string]: any};
