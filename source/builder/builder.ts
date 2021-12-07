@@ -14,7 +14,7 @@ import {
 } from "../type/dom";
 
 
-export class BaseDocumentBuilder<D extends SuperDocumentLike<D>> {
+export class BaseBuilder<D extends SuperDocumentLike<D>> {
 
   protected readonly document!: D;
 
@@ -52,11 +52,11 @@ export class BaseDocumentBuilder<D extends SuperDocumentLike<D>> {
 }
 
 
-export class DocumentBuilder extends BaseDocumentBuilder<Document> {
+export class Builder extends BaseBuilder<Document> {
 
 }
 
 
-export class SimpleDocumentBuilder extends BaseDocumentBuilder<SimpleDocument> {
+export class SimpleBuilder extends BaseBuilder<SimpleDocument> {
 
 }

@@ -4,7 +4,7 @@ import {
   Parser
 } from "parsimmon";
 import {
-  DocumentBuilder
+  Builder
 } from "../builder/builder";
 import type {
   ChildrenArgs,
@@ -36,7 +36,7 @@ export interface ZenmlPlugin {
 export class SimpleZenmlPlugin implements ZenmlPlugin {
 
   private zenmlParser!: ZenmlParser;
-  private builder!: DocumentBuilder;
+  private builder!: Builder;
   private pluginFunction: ZenmlPluginFunction;
 
   public constructor(pluginFunction: ZenmlPluginFunction) {
@@ -48,7 +48,7 @@ export class SimpleZenmlPlugin implements ZenmlPlugin {
   }
 
   public updateDocument(document: Document): void {
-    this.builder = new DocumentBuilder(document);
+    this.builder = new Builder(document);
   }
 
   public getParser(): Parser<Nodes> {
@@ -62,4 +62,4 @@ export class SimpleZenmlPlugin implements ZenmlPlugin {
 }
 
 
-export type ZenmlPluginFunction = (builder: DocumentBuilder, tagName: string, marks: ZenmlMarks, attributes: ZenmlAttributes, childrenArgs: ChildrenArgs) => Nodes;
+export type ZenmlPluginFunction = (builder: Builder, tagName: string, marks: ZenmlMarks, attributes: ZenmlAttributes, childrenArgs: ChildrenArgs) => Nodes;

@@ -5,16 +5,16 @@ import {
   XMLSerializer
 } from "@xmldom/xmldom";
 import {
-  DocumentBuilder
+  Builder
 } from "../../source";
 
 
 let implementation = new DOMImplementation();
 let serializer = new XMLSerializer();
 
-export function createBuilder(): [Document, DocumentBuilder] {
+export function createBuilder(): [Document, Builder] {
   let document = implementation.createDocument(null, null, null);
-  let builder = new DocumentBuilder(document);
+  let builder = new Builder(document);
   return [document, builder];
 }
 
