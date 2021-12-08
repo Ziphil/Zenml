@@ -133,16 +133,20 @@ export class ZenmlParser {
       let parser = this.verbalText;
       return parser;
     } else {
-      let innerParsers = [];
-      innerParsers.push(lazy(() => this.element(state)));
-      innerParsers.push(lazy(() => this.braceElement(state)), lazy(() => this.bracketElement(state)));
-      if (!state.inSlash) {
-        innerParsers.push(lazy(() => this.slashElement(state)));
-      }
-      innerParsers.push(this.comment, this.text);
-      let parser = alt(...innerParsers).many().map((nodesList) => nodesList.flat());
+      let parser = lazy(() => this.fullNodes(state));
       return parser;
     }
+  });
+
+  public readonly fullNodes: StateParser<Nodes, ZenmlParserState> = create((state) => {
+    let innerParsers = [];
+    innerParsers.push(this.element(state), this.braceElement(state), this.bracketElement(state));
+    if (!state.inSlash) {
+      innerParsers.push(this.slashElement(state));
+    }
+    innerParsers.push(this.comment, this.text);
+    let parser = alt(...innerParsers).many().map((nodesList) => nodesList.flat());
+    return parser;
   });
 
   public readonly element: StateParser<Nodes, ZenmlParserState> = create((state) => {
