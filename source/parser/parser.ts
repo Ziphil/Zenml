@@ -72,7 +72,7 @@ export type ZenmlTagSpec = {tagName: string, marks: ZenmlMarks, attributes: Zenm
 export type Nodes = Array<Node>;
 export type ChildrenArgs = Array<Nodes>;
 
-type ZenmlParserState = {
+export type ZenmlParserState = {
   verbal?: boolean,
   inSlash?: boolean,
   pluginName?: string
