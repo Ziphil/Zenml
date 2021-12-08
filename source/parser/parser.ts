@@ -85,9 +85,9 @@ export type ZenmlParserOptions = {
 export class ZenmlParser {
 
   public document: Document;
-  protected readonly implementation: DOMImplementation;
-  protected readonly pluginManager: ZenmlPluginManager;
-  protected readonly options: ZenmlParserOptions;
+  public readonly implementation: DOMImplementation;
+  public readonly pluginManager: ZenmlPluginManager;
+  public readonly options: ZenmlParserOptions;
 
   public constructor(implementation: DOMImplementation, options?: ZenmlParserOptions) {
     this.document = implementation.createDocument(null, null, null);
