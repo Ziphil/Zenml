@@ -50,7 +50,10 @@ describe("transformation of simple documents", () => {
         });
         return self;
       });
-      transformer.registerTextRule(true, (transformer, document, text) => text.data);
+      transformer.registerTextRule(true, (transformer, document, text) => {
+        let self = document.createTextNode(text.data);
+        return self;
+      });
     });
   });
   test("call factories", () => {
@@ -76,7 +79,10 @@ describe("transformation of simple documents", () => {
         self.appendElement("fac");
         return self;
       });
-      transformer.registerTextRule(true, (transformer, document, text) => text.data);
+      transformer.registerTextRule(true, (transformer, document, text) => {
+        let self = document.createTextNode(text.data);
+        return self;
+      });
     });
   });
 });
@@ -103,7 +109,10 @@ describe("registration of templates", () => {
       self.appendChild(transformer.call("textfac"));
       return self;
     });
-    manager.registerTextFactory("textfac", () => "textfac");
+    manager.registerTextFactory("textfac", (transformer, document, text) => {
+      let self = document.createTextNode("textfac");
+      return self;
+    });
     shouldEquivalent(`<foo>text</foo>`, `<foo-tr>texttextfac<fac/></foo-tr>`, (transformer) => transformer.regsiterTemplateManager(manager));
   });
 });

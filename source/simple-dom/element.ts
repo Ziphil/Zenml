@@ -3,7 +3,7 @@
 import escapeXml from "xml-escape";
 import {
   NodeCallback,
-  NodeLike
+  NodeLikeOf
 } from "../type/dom";
 import type {
   BaseDocument,
@@ -13,12 +13,16 @@ import type {
   BaseDocumentFragment,
   SimpleDocumentFragment
 } from "./document-fragment";
+import type {
+  BaseText,
+  SimpleText
+} from "./text";
 
 
 const VOID_TAG_NAMES = ["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"];
 
 
-export abstract class BaseElement<D extends BaseDocument<D, F, E>, F extends BaseDocumentFragment<D, F, E>, E extends BaseElement<D, F, E>> {
+export abstract class BaseElement<D extends BaseDocument<D, F, E, T>, F extends BaseDocumentFragment<D, F, E, T>, E extends BaseElement<D, F, E, T>, T extends BaseText<D, F, E, T>> {
 
   protected readonly document: D;
   public tagName: string;
@@ -32,7 +36,7 @@ export abstract class BaseElement<D extends BaseDocument<D, F, E>, F extends Bas
     this.fragment = document.createDocumentFragment();
   }
 
-  public appendChild<N extends NodeLike<F, E, string>>(child: N, callback?: NodeCallback<N>): N {
+  public appendChild<N extends NodeLikeOf<D>>(child: N, callback?: NodeCallback<N>): N {
     return this.fragment.appendChild(child, callback);
   }
 
@@ -40,7 +44,7 @@ export abstract class BaseElement<D extends BaseDocument<D, F, E>, F extends Bas
     return this.fragment.appendElement(tagName, callback);
   }
 
-  public appendTextNode(content: string, callback?: NodeCallback<string>): string {
+  public appendTextNode(content: string, callback?: NodeCallback<T>): T {
     return this.fragment.appendTextNode(content, callback);
   }
 
@@ -79,6 +83,6 @@ export abstract class BaseElement<D extends BaseDocument<D, F, E>, F extends Bas
 }
 
 
-export class SimpleElement extends BaseElement<SimpleDocument, SimpleDocumentFragment, SimpleElement> {
+export class SimpleElement extends BaseElement<SimpleDocument, SimpleDocumentFragment, SimpleElement, SimpleText> {
 
 }

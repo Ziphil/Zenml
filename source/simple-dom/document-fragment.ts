@@ -12,24 +12,28 @@ import type {
   BaseElement,
   SimpleElement
 } from "./element";
+import type {
+  BaseText,
+  SimpleText
+} from "./text";
 
 
-export class BaseDocumentFragment<D extends BaseDocument<D, F, E>, F extends BaseDocumentFragment<D, F, E>, E extends BaseElement<D, F, E>> {
+export class BaseDocumentFragment<D extends BaseDocument<D, F, E, T>, F extends BaseDocumentFragment<D, F, E, T>, E extends BaseElement<D, F, E, T>, T extends BaseText<D, F, E, T>> {
 
   protected readonly document: D;
-  public readonly nodes: Array<E | string>;
+  public readonly nodes: Array<E | T>;
 
   public constructor(document: D) {
     this.document = document;
     this.nodes = [];
   }
 
-  public appendChild<N extends NodeLike<F, E, string>>(child: N, callback?: NodeCallback<N>): N {
+  public appendChild<N extends NodeLike<F, E, T>>(child: N, callback?: NodeCallback<N>): N {
     callback?.call(this, child);
     if (child instanceof BaseDocumentFragment) {
       this.nodes.push(...child.nodes);
     } else {
-      let castChild = child as E | string;
+      let castChild = child as E | T;
       this.nodes.push(castChild);
     }
     return child;
@@ -41,7 +45,7 @@ export class BaseDocumentFragment<D extends BaseDocument<D, F, E>, F extends Bas
     return element;
   }
 
-  public appendTextNode(content: string, callback?: NodeCallback<string>): string {
+  public appendTextNode(content: string, callback?: NodeCallback<T>): T {
     let text = this.document.createTextNode(content);
     this.appendChild(text, callback);
     return text;
@@ -58,6 +62,6 @@ export class BaseDocumentFragment<D extends BaseDocument<D, F, E>, F extends Bas
 }
 
 
-export class SimpleDocumentFragment extends BaseDocumentFragment<SimpleDocument, SimpleDocumentFragment, SimpleElement> {
+export class SimpleDocumentFragment extends BaseDocumentFragment<SimpleDocument, SimpleDocumentFragment, SimpleElement, SimpleText> {
 
 }

@@ -12,6 +12,10 @@ import {
   BaseElement,
   SimpleElement
 } from "./element";
+import {
+  BaseText,
+  SimpleText
+} from "./text";
 
 
 export type BaseDocumentOptions = {
@@ -20,7 +24,7 @@ export type BaseDocumentOptions = {
 };
 
 
-export abstract class BaseDocument<D extends BaseDocument<D, F, E>, F extends BaseDocumentFragment<D, F, E>, E extends BaseElement<D, F, E>> {
+export abstract class BaseDocument<D extends BaseDocument<D, F, E, T>, F extends BaseDocumentFragment<D, F, E, T>, E extends BaseElement<D, F, E, T>, T extends BaseText<D, F, E, T>> {
 
   protected readonly fragment: F;
   public readonly options: BaseDocumentOptions;
@@ -34,11 +38,9 @@ export abstract class BaseDocument<D extends BaseDocument<D, F, E>, F extends Ba
 
   public abstract createElement(tagName: string): E;
 
-  public createTextNode(content: string): string {
-    return content;
-  }
+  public abstract createTextNode(content: string): T;
 
-  public appendChild<N extends NodeLike<F, E, string>>(child: N, callback?: NodeCallback<N>): N {
+  public appendChild<N extends NodeLike<F, E, T>>(child: N, callback?: NodeCallback<N>): N {
     return this.fragment.appendChild(child, callback);
   }
 
@@ -46,7 +48,7 @@ export abstract class BaseDocument<D extends BaseDocument<D, F, E>, F extends Ba
     return this.fragment.appendElement(tagName, callback);
   }
 
-  public appendTextNode(content: string, callback?: NodeCallback<string>): string {
+  public appendTextNode(content: string, callback?: NodeCallback<T>): T {
     return this.fragment.appendTextNode(content, callback);
   }
 
@@ -68,7 +70,7 @@ export abstract class BaseDocument<D extends BaseDocument<D, F, E>, F extends Ba
 }
 
 
-export class SimpleDocument extends BaseDocument<SimpleDocument, SimpleDocumentFragment, SimpleElement> {
+export class SimpleDocument extends BaseDocument<SimpleDocument, SimpleDocumentFragment, SimpleElement, SimpleText> {
 
   public createDocumentFragment(): SimpleDocumentFragment {
     return new SimpleDocumentFragment(this);
@@ -76,6 +78,10 @@ export class SimpleDocument extends BaseDocument<SimpleDocument, SimpleDocumentF
 
   public createElement(tagName: string): SimpleElement {
     return new SimpleElement(this, tagName);
+  }
+
+  public createTextNode(content: string): SimpleText {
+    return new SimpleText(this, content);
   }
 
 }
