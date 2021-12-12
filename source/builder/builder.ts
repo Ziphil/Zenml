@@ -37,16 +37,22 @@ export class BaseBuilder<D extends SuperDocumentLike<D>> {
     this.appendChild(parent, text, callback);
   }
 
-  public createDocumentFragment(): DocumentFragmentOf<D> {
-    return this.document.createDocumentFragment();
+  public createDocumentFragment(callback?: NodeCallback<DocumentFragmentOf<D>>): DocumentFragmentOf<D> {
+    let fragment = this.document.createDocumentFragment();
+    callback?.call(this, fragment);
+    return fragment;
   }
 
-  public createElement(tagName: string): ElementOf<D> {
-    return this.document.createElement(tagName);
+  public createElement(tagName: string, callback?: NodeCallback<ElementOf<D>>): ElementOf<D> {
+    let element = this.document.createElement(tagName);
+    callback?.call(this, element);
+    return element;
   }
 
-  public createTextNode(content: string): TextOf<D> {
-    return this.document.createTextNode(content);
+  public createTextNode(content: string, callback?: NodeCallback<ElementOf<D>>): TextOf<D> {
+    let text = this.document.createTextNode(content);
+    callback?.call(this, text);
+    return text;
   }
 
 }
