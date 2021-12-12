@@ -10,10 +10,12 @@ import {
 } from "./document-fragment";
 import {
   BaseElement,
+  BaseElementOptions,
   SimpleElement
 } from "./element";
 import {
   BaseText,
+  BaseTextOptions,
   SimpleText
 } from "./text";
 
@@ -76,12 +78,12 @@ export class SimpleDocument extends BaseDocument<SimpleDocument, SimpleDocumentF
     return new SimpleDocumentFragment(this);
   }
 
-  public createElement(tagName: string): SimpleElement {
-    return new SimpleElement(this, tagName);
+  public createElement(tagName: string, options?: BaseElementOptions): SimpleElement {
+    return new SimpleElement(this, tagName, options);
   }
 
-  public createTextNode(content: string): SimpleText {
-    return new SimpleText(this, content);
+  public createTextNode(content: string, options?: BaseTextOptions): SimpleText {
+    return new SimpleText(this, content, options);
   }
 
 }

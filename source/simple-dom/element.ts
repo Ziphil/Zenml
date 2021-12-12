@@ -21,6 +21,10 @@ import type {
 
 const VOID_TAG_NAMES = ["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"];
 
+export type BaseElementOptions = {
+  html?: boolean
+};
+
 
 export abstract class BaseElement<D extends BaseDocument<D, F, E, T>, F extends BaseDocumentFragment<D, F, E, T>, E extends BaseElement<D, F, E, T>, T extends BaseText<D, F, E, T>> {
 
@@ -28,12 +32,14 @@ export abstract class BaseElement<D extends BaseDocument<D, F, E, T>, F extends 
   public tagName: string;
   protected readonly attributes: Map<string, string>;
   protected readonly fragment: F;
+  public readonly options: BaseElementOptions;
 
-  public constructor(document: D, tagName: string) {
+  public constructor(document: D, tagName: string, options?: BaseElementOptions) {
     this.document = document;
     this.tagName = tagName;
     this.attributes = new Map();
     this.fragment = document.createDocumentFragment();
+    this.options = options ?? {};
   }
 
   public appendChild<N extends NodeLikeOf<D>>(child: N, callback?: NodeCallback<N>): N {
@@ -58,12 +64,12 @@ export abstract class BaseElement<D extends BaseDocument<D, F, E, T>, F extends 
 
   public toString(): string {
     let string = "";
-    if (this.document.options.html) {
+    if (this.options.html || (this.options.html === undefined && this.document.options.html)) {
       string += `<${this.tagName}`;
       string += Array.from(this.attributes).map(([name, value]) => ` ${name}="${escapeXml(value)}"`).join("");
       string += ">";
       if (!VOID_TAG_NAMES.includes(this.tagName)) {
-        string += this.fragment.nodes.map((child) => (typeof child === "string") ? escapeXml(child) : child.toString()).join("");
+        string += this.fragment.nodes.map((child) => child.toString()).join("");
         string += `</${this.tagName}>`;
       }
     } else {
@@ -71,7 +77,7 @@ export abstract class BaseElement<D extends BaseDocument<D, F, E, T>, F extends 
       string += Array.from(this.attributes).map(([name, value]) => ` ${name}="${escapeXml(value)}"`).join("");
       if (this.fragment.nodes.length > 0) {
         string += ">";
-        string += this.fragment.nodes.map((child) => (typeof child === "string") ? escapeXml(child) : child.toString()).join("");
+        string += this.fragment.nodes.map((child) => child.toString()).join("");
         string += `</${this.tagName}>`;
       } else {
         string += "/>";
