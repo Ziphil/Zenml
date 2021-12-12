@@ -15,14 +15,15 @@ import {
 
 
 export type BaseDocumentOptions = {
-  includeDeclaration?: boolean;
+  includeDeclaration?: boolean,
+  html?: boolean
 };
 
 
 export abstract class BaseDocument<D extends BaseDocument<D, F, E>, F extends BaseDocumentFragment<D, F, E>, E extends BaseElement<D, F, E>> {
 
   protected readonly fragment: F;
-  protected readonly options: BaseDocumentOptions;
+  public readonly options: BaseDocumentOptions;
 
   public constructor(options?: BaseDocumentOptions) {
     this.fragment = this.createDocumentFragment();
@@ -52,7 +53,11 @@ export abstract class BaseDocument<D extends BaseDocument<D, F, E>, F extends Ba
   public toString(): string {
     let string = "";
     if (this.options.includeDeclaration) {
-      string += "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+      if (this.options.html) {
+        string += "<!DOCTYPE html>";
+      } else {
+        string += "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+      }
     }
     for (let node of this.fragment.nodes) {
       string += node.toString();
