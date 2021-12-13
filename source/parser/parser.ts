@@ -12,6 +12,9 @@ import {
   isText
 } from "../util/dom";
 import {
+  ZenmlPlugin
+} from "./plugin";
+import {
   ZenmlPluginLike,
   ZenmlPluginManager
 } from "./plugin-manager";
@@ -75,7 +78,8 @@ export type ChildrenArgs = Array<Nodes>;
 export type ZenmlParserState = {
   verbal?: boolean,
   inSlash?: boolean,
-  pluginName?: string
+  pluginName?: string,
+  [key: string]: any | undefined
 };
 export type ZenmlParserOptions = {
   specialElementNames?: {brace?: string, bracket?: string, slash?: string}
@@ -122,7 +126,7 @@ export class ZenmlParser {
 
   public readonly nodes: StateParser<Nodes, ZenmlParserState> = create((state) => {
     if (state.pluginName !== undefined) {
-      let plugin = this.pluginManager.getPlugin(state.pluginName);
+      let plugin = this.determinePlugin(state.pluginName);
       if (plugin !== null) {
         let parser = plugin.getParser();
         return parser;
@@ -446,6 +450,11 @@ export class ZenmlParser {
     this.pluginManager.updateDocument(this.document);
   }
 
+  protected determinePlugin(name: string): ZenmlPlugin | null {
+    let plugin = this.pluginManager.getPlugin(name);
+    return plugin;
+  }
+
   protected determineNextState(state: ZenmlParserState, tagName: string, marks: ZenmlMarks, attributes: ZenmlAttributes, macro: boolean): ZenmlParserState {
     let nextState = {...state, inSlash: false};
     if (marks.includes("verbal")) {
@@ -474,7 +483,7 @@ export class ZenmlParser {
   }
 
   protected processMacro(tagName: string, marks: ZenmlMarks, attributes: ZenmlAttributes, childrenArgs: ChildrenArgs): Nodes {
-    let plugin = this.pluginManager.getPlugin(tagName);
+    let plugin = this.determinePlugin(tagName);
     if (plugin !== null) {
       let element = plugin.createElement(tagName, marks, attributes, childrenArgs);
       return element;
