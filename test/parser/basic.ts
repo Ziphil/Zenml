@@ -1,44 +1,14 @@
 //
 
-import Parsimmon from "parsimmon";
-import {
-  Parser
-} from "parsimmon";
 import $ from "ts-dedent";
 import {
-  Nodes,
-  ZenmlAttributes,
-  ZenmlMarks,
-  ZenmlParser,
-  ZenmlParserOptions,
-  ZenmlPlugin
-} from "../source";
+  SimpleZenmlPlugin
+} from "../../source";
 import {
-  XMLSerializer
-} from "../source/dom";
+  shouldEquivalent,
+  shouldFail
+} from "./util";
 
-
-let serializer = new XMLSerializer();
-
-function createParser(options?: ZenmlParserOptions, plugins?: Array<[string, ZenmlPlugin]>): ZenmlParser {
-  let parser = new ZenmlParser(options);
-  if (plugins !== undefined) {
-    for (let [name, plugin] of plugins) {
-      parser.registerPlugin(name, plugin);
-    }
-  }
-  return parser;
-}
-
-function shouldEquivalent(input: string, output: string, options?: ZenmlParserOptions, plugins?: Array<[string, ZenmlPlugin]>): void {
-  let parser = createParser(options, plugins);
-  expect(serializer.serializeToString(parser.tryParse(input))).toBe(output);
-}
-
-function shouldFail(input: string, options?: ZenmlParserOptions, plugins?: Array<[string, ZenmlPlugin]>): void {
-  let parser = createParser(options, plugins);
-  expect(() => parser.tryParse(input)).toThrow();
-}
 
 describe("elements and texts", () => {
   test("basic", () => {
@@ -78,6 +48,57 @@ describe("elements and texts", () => {
         neko<bar>mofu</bar>
         neko
       </foo>
+    `);
+  });
+});
+
+describe("spaces in elements", () => {
+  test("after tags", () => {
+    shouldEquivalent(`\\element ;`, `<element/>`);
+    shouldEquivalent(`\\element  |attr="value"|;`, `<element attr="value"/>`);
+    shouldEquivalent(`\\element  <text>`, `<element>text</element>`);
+    shouldEquivalent(`\\element |attr="value"|<text>`, `<element attr="value">text</element>`);
+    shouldEquivalent(`\\element*  <text>`, `<element>text</element>`);
+  });
+  test("after attributes", () => {
+    shouldEquivalent(`\\element|attr="value"|  ;`, `<element attr="value"/>`);
+    shouldEquivalent(`\\element|attr="value"| <text>`, `<element attr="value">text</element>`);
+  });
+  test("inside attribute blocks", () => {
+    shouldEquivalent(`\\element|  attr="value"|;`, `<element attr="value"/>`);
+    shouldEquivalent(`\\element|attr="value" |;`, `<element attr="value"/>`);
+    shouldEquivalent(`\\element| attr="value" |;`, `<element attr="value"/>`);
+  });
+  test("around attribute commas", () => {
+    shouldEquivalent(`\\element|one="one", two="two"|;`, `<element one="one" two="two"/>`);
+    shouldEquivalent(`\\element|one="one"  ,two="two"|;`, `<element one="one" two="two"/>`);
+    shouldEquivalent(`\\element|one="one" ,  two="two" ,  three="three"|;`, `<element one="one" two="two" three="three"/>`);
+  });
+  test("around attribute equals", () => {
+    shouldEquivalent(`\\element|attr= "value"|;`, `<element attr="value"/>`);
+    shouldEquivalent(`\\element|attr  ="value"|;`, `<element attr="value"/>`);
+    shouldEquivalent(`\\element|attr =  "value"|;`, `<element attr="value"/>`);
+  });
+  test("between arguments", () => {
+    shouldEquivalent(`\\element+<one> <two>`, `<element>one</element><element>two</element>`);
+    shouldEquivalent(`\\element+<one> <two>   <three>`, `<element>one</element><element>two</element><element>three</element>`);
+  });
+  test("after slash (not allowed)", () => {
+    shouldFail(`\\  element;`);
+  });
+  test("between element name and mark (not allowed)", () => {
+    shouldFail(`\\element +;`);
+  });
+  test("complex", () => {
+    shouldEquivalent($`
+      \\element+ | foo= "foo" ,  bar = "bar" ,
+        baz =  "baz"
+        , qux  ="qux"
+      |
+      <one>
+        <two>
+    `, $`
+      <element foo="foo" bar="bar" baz="baz" qux="qux">one</element><element foo="foo" bar="bar" baz="baz" qux="qux">two</element>
     `);
   });
 });
@@ -143,16 +164,10 @@ describe("marks", () => {
   });
 });
 
-describe("macros and plugins", () => {
-  test("simple", () => {
-    let plugin = new TestZenmlPlugin();
-    shouldEquivalent(`&macro<42>`, `<macro><digits>42</digits></macro>`, {}, [["macro", plugin]]);
-    shouldEquivalent(`&macro<100><200>`, `<macro><digits>100</digits></macro>`, {}, [["macro", plugin]]);
-    shouldFail(`&macro<nondigits>`, {}, [["macro", plugin]]);
-  });
-  test("unregistered plugins", () => {
-    let plugin = new TestZenmlPlugin();
-    shouldFail(`&unregistered<42>`, {}, [["macro", plugin]]);
+describe("macros", () => {
+  test("unregistered macros", () => {
+    let plugin = new SimpleZenmlPlugin(() => []);
+    shouldFail(`&unregistered<42>`, {}, (parser) => parser.registerPlugin("macro", plugin));
   });
 });
 
@@ -255,36 +270,3 @@ describe("escapes", () => {
     shouldFail("\\foo|attr=\"`s\"");
   });
 });
-
-
-export class TestZenmlPlugin implements ZenmlPlugin {
-
-  private document!: Document;
-
-  public initialize(zenmlParser: ZenmlParser): void {
-    this.document = zenmlParser.document;
-  }
-
-  public getParser(): Parser<Nodes> {
-    let parser = Parsimmon.digits.map((string) => {
-      let element = this.document.createElement("digits");
-      let text = this.document.createTextNode(string);
-      element.appendChild(text);
-      return [element];
-    });
-    return parser;
-  }
-
-  public createElement(name: string, marks: ZenmlMarks, attributes: ZenmlAttributes, childrenList: Array<Nodes>): Nodes {
-    let element = this.document.createElement(name);
-    let children = childrenList[0] ?? [];
-    for (let attribute of attributes) {
-      element.setAttribute(attribute[0], attribute[1]);
-    }
-    for (let child of children) {
-      element.appendChild(child);
-    }
-    return [element];
-  }
-
-}

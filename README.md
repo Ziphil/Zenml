@@ -14,13 +14,20 @@ It is almost fully compatible with XML, and less redundant and more readable tha
 
 This repository provides a script for parsing a ZenML document to an XML DOM, together with some utility classes which help transform XML documents.
 
-## List of ZenML/XML infrastructures
+## Installation
+Install via [npm](https://www.npmjs.com/package/@zenml/zenml).
+```
+npm i @zenml/zenml
+```
+
+## ZenML/XML infrastructure
+Currently all the Typescript implementations listed below are work-in-progress.
 
 | TypeScript impls | Ruby impls |
 |:--:|:--:|
 | [ZenML parser](https://github.com/Ziphil/Zenml) | [ZenML parser](https://github.com/Ziphil/Zenithal) |
-| ~~Zotica parser~~ | [Zotica parser](https://github.com/Ziphil/ZenithalMathWeb) |
-| ~~utilities and extensions of XML DOM~~ | [utilities and extensions of XML DOM](https://github.com/Ziphil/Zenithal) |
-| ~~utilities for XML conversion~~ | [utilities for XML conversion](https://github.com/Ziphil/Zenithal) |
+| [Zotica parser](https://github.com/Ziphil/ZenmlZotica) | [Zotica parser](https://github.com/Ziphil/ZenithalMathWeb) |
+| [utilities and extensions of XML DOM](https://github.com/Ziphil/ZenmlXmldom) | [utilities and extensions of XML DOM](https://github.com/Ziphil/Zenithal) |
+| [utilities for XML transformation](https://github.com/Ziphil/Zenml) | [utilities for XML transformation](https://github.com/Ziphil/Zenithal) |
 | ~~utilities for book generation~~ | [utilities for book generation](https://github.com/Ziphil/ZenithalBook) |
 | ~~utilities for slide generation~~ | [utilities for slide generation](https://github.com/Ziphil/ZenithalSlide) |

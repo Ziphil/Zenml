@@ -1,19 +1,40 @@
 //
 
 
+export function isElement(node: Node): node is Element {
+  return node.nodeType === 1;
+}
+
+export function isText(node: Node): node is Text {
+  return node.nodeType === 3;
+}
+
+export function getDescendantTexts(element: Element): Array<Text> {
+  let texts = [] as Array<Text>;
+  for (let i = 0 ; i < element.childNodes.length ; i ++) {
+    let child = element.childNodes.item(i);
+    if (isText(child)) {
+      texts.push(child);
+    } else if (isElement(child)) {
+      texts.push(...getDescendantTexts(child));
+    }
+  }
+  return texts;
+}
+
 export function dedentDescendants(nodes: Array<Node>): void {
   let texts = [];
   if (nodes.length >= 1) {
     let firstNode = nodes[0];
     let lastNode = nodes[nodes.length - 1];
-    if (lastNode.isText()) {
+    if (isText(lastNode)) {
       lastNode.data = lastNode.data.replace(/[\x20\n]+$/, "");
     }
     for (let node of nodes) {
-      if (node.isText()) {
+      if (isText(node)) {
         texts.push(node);
-      } else if (node.isElement()) {
-        texts.push(...node.getDescendantTexts());
+      } else if (isElement(node)) {
+        texts.push(...getDescendantTexts(node));
       }
     }
     let indentLength = 100000;
@@ -28,7 +49,7 @@ export function dedentDescendants(nodes: Array<Node>): void {
     for (let text of texts) {
       text.data = text.data.replace(/\n(\x20+)/g, (match) => "\n" + " ".repeat(match.length - indentLength));
     }
-    if (firstNode.isText()) {
+    if (isText(firstNode)) {
       firstNode.data = firstNode.data.replace(/^[\x20\n]+/, "");
     }
   }
