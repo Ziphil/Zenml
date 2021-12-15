@@ -49,7 +49,7 @@ export class BaseBuilder<D extends SuperDocumentLike<D>> {
     return element;
   }
 
-  public createTextNode(content: string, callback?: NodeCallback<ElementOf<D>>): TextOf<D> {
+  public createTextNode(content: string, callback?: NodeCallback<TextOf<D>>): TextOf<D> {
     let text = this.document.createTextNode(content);
     callback?.call(this, text);
     return text;
