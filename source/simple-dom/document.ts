@@ -58,7 +58,7 @@ export abstract class BaseDocument<D extends BaseDocument<D, F, E, T>, F extends
     let string = "";
     if (this.options.includeDeclaration) {
       if (this.options.html) {
-        string += "<!DOCTYPE html>";
+        string += "<!DOCTYPE html>\n";
       } else {
         string += "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
       }
