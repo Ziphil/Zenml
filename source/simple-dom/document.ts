@@ -63,9 +63,7 @@ export abstract class BaseDocument<D extends BaseDocument<D, F, E, T>, F extends
         string += "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
       }
     }
-    for (let node of this.fragment.nodes) {
-      string += node.toString();
-    }
+    string += this.fragment.toString();
     return string;
   }
 
