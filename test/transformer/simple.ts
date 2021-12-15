@@ -87,6 +87,64 @@ describe("transformation of simple documents", () => {
   });
 });
 
+describe("patterns", () => {
+  test("string", () => {
+    shouldEquivalent(`<foo/>`, `<foo-tr/>`, (transformer) => {
+      transformer.registerElementRule("foo", true, (transformer, document) => {
+        let self = document.createDocumentFragment();
+        self.appendElement("foo-tr", (self) => {
+          self.appendChild(transformer.apply());
+        });
+        return self;
+      });
+    });
+  });
+  test("boolean", () => {
+    shouldEquivalent(`<foo/><bar/><baz/>`, `<foo-tr/><bar-tr/><baz-tr/>`, (transformer) => {
+      transformer.registerElementRule(true, true, (transformer, document, element) => {
+        let self = document.createDocumentFragment();
+        self.appendElement(`${element.tagName}-tr`, (self) => {
+          self.appendChild(transformer.apply());
+        });
+        return self;
+      });
+    });
+  });
+  test("regexp", () => {
+    shouldEquivalent(`<foo/><foobar/><bar/>`, `<foo-tr/><foobar-tr/>`, (transformer) => {
+      transformer.registerElementRule(/^foo/, true, (transformer, document, element) => {
+        let self = document.createDocumentFragment();
+        self.appendElement(`${element.tagName}-tr`, (self) => {
+          self.appendChild(transformer.apply());
+        });
+        return self;
+      });
+    });
+  });
+  test("function", () => {
+    shouldEquivalent(`<foo/><bar/><neko/>`, `<foo-tr/><bar-tr/>`, (transformer) => {
+      transformer.registerElementRule((tagName) => tagName.length === 3, true, (transformer, document, element) => {
+        let self = document.createDocumentFragment();
+        self.appendElement(`${element.tagName}-tr`, (self) => {
+          self.appendChild(transformer.apply());
+        });
+        return self;
+      });
+    });
+  });
+  test("multiple", () => {
+    shouldEquivalent(`<foo/><foooo/><bar/><baz/><neko/>`, `<foo-tr/><bar-tr/><neko-tr/>`, (transformer) => {
+      transformer.registerElementRule(["foo", /^b.r$/, (tagName) => tagName.length === 4], true, (transformer, document, element) => {
+        let self = document.createDocumentFragment();
+        self.appendElement(`${element.tagName}-tr`, (self) => {
+          self.appendChild(transformer.apply());
+        });
+        return self;
+      });
+    });
+  });
+});
+
 describe("registration of templates", () => {
   test("via template manager", () => {
     let manager = new TemplateManager<SimpleDocument>();

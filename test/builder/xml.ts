@@ -58,3 +58,22 @@ describe("xml builder", () => {
     shouldEquivalent(document, `<root>before<first><inner/></first><second>text</second>after</root>`);
   });
 });
+
+describe("xml builder and callbacks", () => {
+  test("element", () => {
+    let [document, builder] = createBuilder();
+    let element = builder.createElement("element", (element) => {
+      element.setAttribute("attr", "value");
+    });
+    builder.appendChild(document, element);
+    shouldEquivalent(document, `<element attr="value"/>`);
+  });
+  test("text", () => {
+    let [document, builder] = createBuilder();
+    let element = builder.createTextNode("text", (text) => {
+      text.data += "added";
+    });
+    builder.appendChild(document, element);
+    shouldEquivalent(document, `textadded`);
+  });
+});
