@@ -28,7 +28,9 @@ export function dedentDescendants(nodes: Array<Node>): void {
     let firstNode = nodes[0];
     let lastNode = nodes[nodes.length - 1];
     if (isText(lastNode)) {
-      lastNode.data = lastNode.data.replace(/[\x20\r\n]+$/, "");
+      let lastNodeContent = lastNode.data.replace(/[\x20\r\n]+$/, "");
+      lastNode.data = lastNodeContent;
+      lastNode.nodeValue = lastNodeContent;
     }
     for (let node of nodes) {
       if (isText(node)) {
@@ -48,10 +50,14 @@ export function dedentDescendants(nodes: Array<Node>): void {
       }
     }
     for (let text of texts) {
-      text.data = text.data.replace(/(\r\n|\n|\r)(\x20+)/g, (match, breakString, spaceString) => breakString + " ".repeat(spaceString.length - indentLength));
+      let textContent = text.data.replace(/(\r\n|\n|\r)(\x20+)/g, (match, breakString, spaceString) => breakString + " ".repeat(spaceString.length - indentLength));
+      text.data = textContent;
+      text.nodeValue = textContent;
     }
     if (isText(firstNode)) {
-      firstNode.data = firstNode.data.replace(/^[\x20\r\n]+/, "");
+      let firstNodeContent = firstNode.data.replace(/^[\x20\r\n]+/, "");
+      firstNode.data = firstNodeContent;
+      firstNode.nodeValue = firstNodeContent;
     }
   }
 }
