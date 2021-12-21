@@ -28,7 +28,7 @@ export function dedentDescendants(nodes: Array<Node>): void {
     let firstNode = nodes[0];
     let lastNode = nodes[nodes.length - 1];
     if (isText(lastNode)) {
-      lastNode.data = lastNode.data.replace(/[\x20\n]+$/, "");
+      lastNode.data = lastNode.data.replace(/[\x20\r\n]+$/, "");
     }
     for (let node of nodes) {
       if (isText(node)) {
@@ -39,18 +39,19 @@ export function dedentDescendants(nodes: Array<Node>): void {
     }
     let indentLength = 100000;
     for (let text of texts) {
-      let matches = text.data.match(/\n(\x20+)/g) ?? [];
-      for (let match of matches) {
-        if (match.length < indentLength) {
-          indentLength = match.length;
+      let regexp = /(\r\n|\n|\r)(\x20+)/g;
+      let match;
+      while ((match = regexp.exec(text.data)) !== null) {
+        if (match[2].length < indentLength) {
+          indentLength = match[2].length;
         }
       }
     }
     for (let text of texts) {
-      text.data = text.data.replace(/\n(\x20+)/g, (match) => "\n" + " ".repeat(match.length - indentLength));
+      text.data = text.data.replace(/(\r\n|\n|\r)(\x20+)/g, (match, breakString, spaceString) => breakString + " ".repeat(spaceString.length - indentLength));
     }
     if (isText(firstNode)) {
-      firstNode.data = firstNode.data.replace(/^[\x20\n]+/, "");
+      firstNode.data = firstNode.data.replace(/^[\x20\r\n]+/, "");
     }
   }
 }

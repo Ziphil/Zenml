@@ -1,4 +1,4 @@
 //
 
-import parsimmon = require("parsimmon");
+import parsimmon from "parsimmon";
 export = parsimmon;

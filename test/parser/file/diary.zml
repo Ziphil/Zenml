@@ -91,5 +91,16 @@
   \p<
     ということで、[O] は形容詞に対してしか使えないとするのが良いと現状では感じます。
   >
+  \h1<テスト>
+  \pre~*<
+    variable = 1 + "sas"
+    puts(variable)
+    def indent
+      indented_block.each do |i|
+        i += 1
+        this_is_a_very_long_line(this_is_a_very_long_identifier_in_a_very_long_line) + this_is_a_very_long_line
+      end
+    end
+  >
 
 >

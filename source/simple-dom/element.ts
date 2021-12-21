@@ -69,7 +69,7 @@ export abstract class BaseElement<D extends BaseDocument<D, F, E, T>, F extends 
       string += Array.from(this.attributes).map(([name, value]) => ` ${name}="${escapeXml(value)}"`).join("");
       string += ">";
       if (!VOID_TAG_NAMES.includes(this.tagName)) {
-        string += this.fragment.nodes.map((child) => child.toString()).join("");
+        string += this.fragment.toString();
         string += `</${this.tagName}>`;
       }
     } else {
@@ -77,7 +77,7 @@ export abstract class BaseElement<D extends BaseDocument<D, F, E, T>, F extends 
       string += Array.from(this.attributes).map(([name, value]) => ` ${name}="${escapeXml(value)}"`).join("");
       if (this.fragment.nodes.length > 0) {
         string += ">";
-        string += this.fragment.nodes.map((child) => child.toString()).join("");
+        string += this.fragment.toString();
         string += `</${this.tagName}>`;
       } else {
         string += "/>";
