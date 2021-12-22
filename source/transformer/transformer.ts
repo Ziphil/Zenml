@@ -22,12 +22,12 @@ import {
 
 
 export type BaseTransformerOptions<D, C, V> = {
-  initialEnvironments?: C,
-  initialVariables?: V
+  initialEnvironments?: Partial<C>,
+  initialVariables?: Partial<V>
 };
 export type BaseTransformerTransformOptions<D, C, V> = {
   initialScope?: string,
-  initialVariables?: V
+  initialVariables?: Partial<V>
 };
 export type AnyObject = {[key: string]: any};
 
@@ -143,9 +143,9 @@ export abstract class BaseTransformer<D extends SuperDocumentLike<D>, C = AnyObj
     this.document = this.implementation();
   }
 
-  protected abstract resetEnvironments(initialEnvironments?: C): void;
+  protected abstract resetEnvironments(initialEnvironments?: Partial<C>): void;
 
-  protected abstract resetVariables(initialVariables?: V): void;
+  protected abstract resetVariables(initialVariables?: Partial<V>): void;
 
   protected createLightTransformer(currentNode: Element | Text, currentScope: string): LightTransformer<D, C, V> {
     let outerThis = this;
@@ -164,11 +164,11 @@ export abstract class BaseTransformer<D extends SuperDocumentLike<D>, C = AnyObj
 
 export class SimpleTransformer<D extends SuperDocumentLike<D>> extends BaseTransformer<D, AnyObject, AnyObject> {
 
-  protected resetEnvironments(initialEnvironments?: AnyObject): void {
+  protected resetEnvironments(initialEnvironments?: Partial<AnyObject>): void {
     this.environments = initialEnvironments ?? {};
   }
 
-  protected resetVariables(initialVariables?: AnyObject): void {
+  protected resetVariables(initialVariables?: Partial<AnyObject>): void {
     this.variables = initialVariables ?? {};
   }
 
