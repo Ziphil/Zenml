@@ -14,4 +14,4 @@ export * from "./transformer/transformer";
 export * from "./type/dom";
 
 
-export const VERSION = "0.1.3";
+export const VERSION = "0.2.0";
