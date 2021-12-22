@@ -56,7 +56,9 @@ describe("stringification", () => {
   test("raw texts", () => {
     let document = new SimpleDocument({includeDeclaration: false});
     document.appendElement("element", (self) => {
-      self.appendChild(document.createTextNode("<raw>&amp;</raw>", {raw: true}));
+      self.appendChild(document.createTextNode("<raw>&amp;</raw>", (self) => {
+        self.options.raw = true;
+      }));
     });
     expect(document.toString()).toBe(`<element><raw>&amp;</raw></element>`);
   });

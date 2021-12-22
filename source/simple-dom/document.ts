@@ -36,11 +36,29 @@ export abstract class BaseDocument<D extends BaseDocument<D, F, E, T>, F extends
     this.options = options ?? {};
   }
 
-  public abstract createDocumentFragment(): F;
+  protected abstract prepareDocumentFragment(): F;
 
-  public abstract createElement(tagName: string): E;
+  protected abstract prepareElement(tagName: string): E;
 
-  public abstract createTextNode(content: string): T;
+  protected abstract prepareTextNode(content: string): T;
+
+  public createDocumentFragment(callback?: NodeCallback<F>): F {
+    let fragment = this.prepareDocumentFragment();
+    callback?.call(this, fragment);
+    return fragment;
+  }
+
+  public createElement(tagName: string, callback?: NodeCallback<E>): E {
+    let element = this.prepareElement(tagName);
+    callback?.call(this, element);
+    return element;
+  }
+
+  public createTextNode(content: string, callback?: NodeCallback<T>): T {
+    let text = this.prepareTextNode(content);
+    callback?.call(this, text);
+    return text;
+  }
 
   public appendChild<N extends NodeLike<F, E, T>>(child: N, callback?: NodeCallback<N>): N {
     return this.fragment.appendChild(child, callback);
@@ -72,15 +90,15 @@ export abstract class BaseDocument<D extends BaseDocument<D, F, E, T>, F extends
 
 export class SimpleDocument extends BaseDocument<SimpleDocument, SimpleDocumentFragment, SimpleElement, SimpleText> {
 
-  public createDocumentFragment(): SimpleDocumentFragment {
+  protected prepareDocumentFragment(): SimpleDocumentFragment {
     return new SimpleDocumentFragment(this);
   }
 
-  public createElement(tagName: string, options?: BaseElementOptions): SimpleElement {
+  protected prepareElement(tagName: string, options?: BaseElementOptions): SimpleElement {
     return new SimpleElement(this, tagName, options);
   }
 
-  public createTextNode(content: string, options?: BaseTextOptions): SimpleText {
+  protected prepareTextNode(content: string, options?: BaseTextOptions): SimpleText {
     return new SimpleText(this, content, options);
   }
 
