@@ -70,11 +70,20 @@ export abstract class BaseTransformer<D extends SuperDocumentLike<D>, C = AnyObj
 
   public transform(input: Document, options?: BaseTransformerTransformOptions<D, C, V>): D {
     let initialScope = options?.initialScope ?? "";
+    let document = this.document;
     this.updateDocument();
     this.resetVariables(options?.initialVariables);
-    this.document.appendChild(this.apply(input, initialScope));
-    return this.document;
+    document.appendChild(this.apply(input, initialScope));
+    return document;
   }
+
+  public transformStringify(input: Document, options?: BaseTransformerTransformOptions<D, C, V>): string {
+    let document = this.transform(input, options);
+    let string = this.stringify(document);
+    return string;
+  }
+
+  protected abstract stringify(document: D): string;
 
   private apply(node: Document | Element | Text, scope: string, args?: any): NodeLikeOf<D> {
     let resultNode = this.document.createDocumentFragment();
@@ -163,6 +172,10 @@ export abstract class BaseTransformer<D extends SuperDocumentLike<D>, C = AnyObj
 
 
 export class SimpleTransformer<D extends SuperDocumentLike<D>> extends BaseTransformer<D, AnyObject, AnyObject> {
+
+  protected stringify(document: D): string {
+    return document.toString();
+  }
 
   protected resetEnvironments(initialEnvironments?: Partial<AnyObject>): void {
     this.environments = initialEnvironments ?? {};
