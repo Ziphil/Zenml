@@ -70,13 +70,22 @@ export abstract class BaseTransformer<D extends SuperDocumentLike<D>, C = AnyObj
 
   public transform(input: Document, options?: BaseTransformerTransformOptions<D, C, V>): D {
     let initialScope = options?.initialScope ?? "";
+    let document = this.document;
     this.updateDocument();
     this.resetVariables(options?.initialVariables);
-    this.document.appendChild(this.apply(input, initialScope));
-    return this.document;
+    document.appendChild(this.apply(input, initialScope, null));
+    return document;
   }
 
-  private apply(node: Document | Element | Text, scope: string, args?: any): NodeLikeOf<D> {
+  public transformStringify(input: Document, options?: BaseTransformerTransformOptions<D, C, V>): string {
+    let document = this.transform(input, options);
+    let string = this.stringify(document);
+    return string;
+  }
+
+  protected abstract stringify(document: D): string;
+
+  private apply(node: Document | Element | Text, scope: string, args: any): NodeLikeOf<D> {
     let resultNode = this.document.createDocumentFragment();
     for (let i = 0 ; i < node.childNodes.length ; i ++) {
       let child = node.childNodes.item(i);
@@ -89,27 +98,27 @@ export abstract class BaseTransformer<D extends SuperDocumentLike<D>, C = AnyObj
     return resultNode;
   }
 
-  private applyElement(element: Element, scope: string, args?: any): NodeLikeOf<D> {
+  private applyElement(element: Element, scope: string, args: any): NodeLikeOf<D> {
     let rule = this.templateManager.findElementRule(element.tagName, scope);
     if (rule !== null) {
-      let lightTransformer = this.createLightTransformer(element, scope);
+      let lightTransformer = this.createLightTransformer(element, scope, args);
       return rule(lightTransformer, this.document, element, scope, args);
     } else {
       return this.document.createDocumentFragment();
     }
   }
 
-  private applyText(text: Text, scope: string, args?: any): NodeLikeOf<D> {
+  private applyText(text: Text, scope: string, args: any): NodeLikeOf<D> {
     let rule = this.templateManager.findTextRule(scope);
     if (rule !== null) {
-      let lightTransformer = this.createLightTransformer(text, scope);
+      let lightTransformer = this.createLightTransformer(text, scope, args);
       return rule(lightTransformer, this.document, text, scope, args);
     } else {
       return this.document.createDocumentFragment();
     }
   }
 
-  private call(name: string, node: Element | Text, scope: string, args?: any): NodeLikeOf<D> {
+  private call(name: string, node: Element | Text, scope: string, args: any): NodeLikeOf<D> {
     if (isElement(node)) {
       return this.callElement(name, node, scope, args);
     } else if (isText(node)) {
@@ -119,20 +128,20 @@ export abstract class BaseTransformer<D extends SuperDocumentLike<D>, C = AnyObj
     }
   }
 
-  private callElement(name: string, element: Element, scope: string, args?: any): NodeLikeOf<D> {
+  private callElement(name: string, element: Element, scope: string, args: any): NodeLikeOf<D> {
     let factory = this.templateManager.findElementFactory(name);
     if (factory !== null) {
-      let lightTransformer = this.createLightTransformer(element, scope);
+      let lightTransformer = this.createLightTransformer(element, scope, args);
       return factory(lightTransformer, this.document, element, scope, args);
     } else {
       return this.document.createDocumentFragment();
     }
   }
 
-  private callText(name: string, text: Text, scope: string, args?: any): NodeLikeOf<D> {
+  private callText(name: string, text: Text, scope: string, args: any): NodeLikeOf<D> {
     let factory = this.templateManager.findTextFactory(name);
     if (factory !== null) {
-      let lightTransformer = this.createLightTransformer(text, scope);
+      let lightTransformer = this.createLightTransformer(text, scope, args);
       return factory(lightTransformer, this.document, text, scope, args);
     } else {
       return this.document.createDocumentFragment();
@@ -147,13 +156,19 @@ export abstract class BaseTransformer<D extends SuperDocumentLike<D>, C = AnyObj
 
   protected abstract resetVariables(initialVariables?: Partial<V>): void;
 
-  protected createLightTransformer(currentNode: Element | Text, currentScope: string): LightTransformer<D, C, V> {
+  protected createLightTransformer(currentNode: Element | Text, currentScope: string, currentArgs: any): LightTransformer<D, C, V> {
     let outerThis = this;
     let apply = function (node?: Element, scope?: string, args?: any): NodeLikeOf<D> {
-      return outerThis.apply(node ?? currentNode, scope ?? currentScope, args);
+      let defaultedNode = (node === undefined) ? currentNode : node;
+      let defaultedScope = (scope === undefined) ? currentScope : scope;
+      let defaultedArgs = (args === undefined) ? currentArgs : args;
+      return outerThis.apply(defaultedNode, defaultedScope, defaultedArgs);
     };
     let call = function (name: string, node?: Element | Text, scope?: string, args?: any): NodeLikeOf<D> {
-      return outerThis.call(name, node ?? currentNode, scope ?? currentScope, args);
+      let defaultedNode = (node === undefined) ? currentNode : node;
+      let defaultedScope = (scope === undefined) ? currentScope : scope;
+      let defaultedArgs = (args === undefined) ? currentArgs : args;
+      return outerThis.call(name, defaultedNode, defaultedScope, defaultedArgs);
     };
     let lightTransformer = {environments: this.environments, variables: this.variables, apply, call};
     return lightTransformer;
@@ -163,6 +178,10 @@ export abstract class BaseTransformer<D extends SuperDocumentLike<D>, C = AnyObj
 
 
 export class SimpleTransformer<D extends SuperDocumentLike<D>> extends BaseTransformer<D, AnyObject, AnyObject> {
+
+  protected stringify(document: D): string {
+    return document.toString();
+  }
 
   protected resetEnvironments(initialEnvironments?: Partial<AnyObject>): void {
     this.environments = initialEnvironments ?? {};
