@@ -21,7 +21,8 @@ npm i @zenml/zenml
 ```
 
 ## ZenML/XML infrastructure
-Currently all the Typescript implementations listed below are work-in-progress.
+There are several libraries related to ZenML/XML, which I call “ZenML/XML infrastructure”.
+The following list shows all the components of the infrastructure:
 
 | TypeScript impls | Ruby impls |
 |:--:|:--:|
