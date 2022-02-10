@@ -85,7 +85,7 @@ export abstract class BaseTransformer<D extends SuperDocumentLike<D>, C = AnyObj
 
   protected abstract stringify(document: D): string;
 
-  private apply(node: Document | Element | Text, scope: string, args: any): NodeLikeOf<D> {
+  protected apply(node: Document | Element | Text, scope: string, args: any): NodeLikeOf<D> {
     let resultNode = this.document.createDocumentFragment();
     for (let i = 0 ; i < node.childNodes.length ; i ++) {
       let child = node.childNodes.item(i);
@@ -98,7 +98,7 @@ export abstract class BaseTransformer<D extends SuperDocumentLike<D>, C = AnyObj
     return resultNode;
   }
 
-  private applyElement(element: Element, scope: string, args: any): NodeLikeOf<D> {
+  protected applyElement(element: Element, scope: string, args: any): NodeLikeOf<D> {
     let rule = this.templateManager.findElementRule(element.tagName, scope);
     if (rule !== null) {
       let lightTransformer = this.createLightTransformer(element, scope, args);
@@ -108,7 +108,7 @@ export abstract class BaseTransformer<D extends SuperDocumentLike<D>, C = AnyObj
     }
   }
 
-  private applyText(text: Text, scope: string, args: any): NodeLikeOf<D> {
+  protected applyText(text: Text, scope: string, args: any): NodeLikeOf<D> {
     let rule = this.templateManager.findTextRule(scope);
     if (rule !== null) {
       let lightTransformer = this.createLightTransformer(text, scope, args);
@@ -118,7 +118,7 @@ export abstract class BaseTransformer<D extends SuperDocumentLike<D>, C = AnyObj
     }
   }
 
-  private call(name: string, node: Element | Text, scope: string, args: any): NodeLikeOf<D> {
+  protected call(name: string, node: Element | Text, scope: string, args: any): NodeLikeOf<D> {
     if (isElement(node)) {
       return this.callElement(name, node, scope, args);
     } else if (isText(node)) {
@@ -128,7 +128,7 @@ export abstract class BaseTransformer<D extends SuperDocumentLike<D>, C = AnyObj
     }
   }
 
-  private callElement(name: string, element: Element, scope: string, args: any): NodeLikeOf<D> {
+  protected callElement(name: string, element: Element, scope: string, args: any): NodeLikeOf<D> {
     let factory = this.templateManager.findElementFactory(name);
     if (factory !== null) {
       let lightTransformer = this.createLightTransformer(element, scope, args);
@@ -138,7 +138,7 @@ export abstract class BaseTransformer<D extends SuperDocumentLike<D>, C = AnyObj
     }
   }
 
-  private callText(name: string, text: Text, scope: string, args: any): NodeLikeOf<D> {
+  protected callText(name: string, text: Text, scope: string, args: any): NodeLikeOf<D> {
     let factory = this.templateManager.findTextFactory(name);
     if (factory !== null) {
       let lightTransformer = this.createLightTransformer(text, scope, args);
