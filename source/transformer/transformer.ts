@@ -152,8 +152,8 @@ export abstract class BaseTransformer<D extends SuperDocumentLike<D>, C = AnyObj
     }
   }
 
-  protected postprocess(result: NodeLikeOf<D>, node: Element | Text, scope: string, args: any): NodeLikeOf<D> {
-    return result;
+  protected postprocess(resultNode: NodeLikeOf<D>, node: Element | Text, scope: string, args: any): NodeLikeOf<D> {
+    return resultNode;
   }
 
   protected updateDocument(): void {
