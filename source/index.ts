@@ -12,6 +12,7 @@ export * from "./transformer/light-transformer";
 export * from "./transformer/template-manager";
 export * from "./transformer/transformer";
 export * from "./type/dom";
+export * from "./util/measure";
 
 
 export const VERSION = "1.0.1";
