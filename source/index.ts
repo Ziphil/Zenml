@@ -15,4 +15,4 @@ export * from "./type/dom";
 export * from "./util/measure";
 
 
-export const VERSION = "1.1.0";
+export const VERSION = "1.2.0";
