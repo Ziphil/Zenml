@@ -13,6 +13,10 @@ export interface LightTransformer<D extends SuperDocumentLike<D>, C, V> {
 
   apply(node?: Element, scope?: string, args?: any): NodeLikeOf<D>;
 
+  processElement(element: Element, scope?: string, args?: any): NodeLikeOf<D>;
+
+  processText(text: Text, scope?: string, args?: any): NodeLikeOf<D>;
+
   call(name: string, node?: Element | Text, scope?: string, args?: any): NodeLikeOf<D>;
 
 }
