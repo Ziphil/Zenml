@@ -90,15 +90,15 @@ export abstract class BaseTransformer<D extends SuperDocumentLike<D>, C = AnyObj
     for (let i = 0 ; i < node.childNodes.length ; i ++) {
       let child = node.childNodes.item(i);
       if (isElement(child)) {
-        resultNode.appendChild(this.applyElement(child, scope, args));
+        resultNode.appendChild(this.processElement(child, scope, args));
       } else if (isText(child)) {
-        resultNode.appendChild(this.applyText(child, scope, args));
+        resultNode.appendChild(this.processText(child, scope, args));
       }
     };
     return resultNode;
   }
 
-  private applyElement(element: Element, scope: string, args: any): NodeLikeOf<D> {
+  private processElement(element: Element, scope: string, args: any): NodeLikeOf<D> {
     let rule = this.templateManager.findElementRule(element.tagName, scope);
     if (rule !== null) {
       let lightTransformer = this.createLightTransformer(element, scope, args);
@@ -109,7 +109,7 @@ export abstract class BaseTransformer<D extends SuperDocumentLike<D>, C = AnyObj
     }
   }
 
-  private applyText(text: Text, scope: string, args: any): NodeLikeOf<D> {
+  private processText(text: Text, scope: string, args: any): NodeLikeOf<D> {
     let rule = this.templateManager.findTextRule(scope);
     if (rule !== null) {
       let lightTransformer = this.createLightTransformer(text, scope, args);
@@ -178,7 +178,17 @@ export abstract class BaseTransformer<D extends SuperDocumentLike<D>, C = AnyObj
       let defaultedArgs = (args === undefined) ? currentArgs : args;
       return outerThis.call(name, defaultedNode, defaultedScope, defaultedArgs);
     };
-    let lightTransformer = {environments: this.environments, variables: this.variables, apply, call};
+    let processElement = function (element: Element, scope?: string, args?: any): NodeLikeOf<D> {
+      let defaultedScope = (scope === undefined) ? currentScope : scope;
+      let defaultedArgs = (args === undefined) ? currentArgs : args;
+      return outerThis.processElement(element, defaultedScope, defaultedArgs);
+    };
+    let processText = function (text: Text, scope?: string, args?: any): NodeLikeOf<D> {
+      let defaultedScope = (scope === undefined) ? currentScope : scope;
+      let defaultedArgs = (args === undefined) ? currentArgs : args;
+      return outerThis.processText(text, defaultedScope, defaultedArgs);
+    };
+    let lightTransformer = {environments: this.environments, variables: this.variables, apply, call, processElement, processText};
     return lightTransformer;
   }
 
