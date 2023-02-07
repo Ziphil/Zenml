@@ -255,7 +255,7 @@ describe("line comments", () => {
 
 describe("escapes", () => {
   test("in texts", () => {
-    shouldEquivalent("`& `< `> `' `\" `{ `} `[ `] `/ `\\ `| `` `# `;", "&amp; &lt; > ' \" { } [ ] / \\ | ` # ;");
+    shouldEquivalent("`& `< `> `; `' `\" `{ `} `[ `] `/ `\\ `| `` `#", "&amp; &lt; > ; ' \" { } [ ] / \\ | ` #");
     shouldEquivalent("\\foo<`>>", "<foo>></foo>");
   });
   test("in strings", () => {
