@@ -22,6 +22,7 @@ npm i @zenml/zenml
 
 ## Documentation
 - [Syntax of ZenML](document/syntax.md)
+- [Basic usage](document/basic.md)
 
 ## ZenML/XML infrastructure
 There are several libraries related to ZenML/XML, which I call “ZenML/XML infrastructure”.

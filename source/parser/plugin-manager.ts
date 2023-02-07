@@ -18,8 +18,6 @@ export class ZenmlPluginManager {
     this.plugins = new Map();
   }
 
-  // Registers a plugin.
-  // If a parser is passed as the third argument, the plugin to be registered will be initialized with the parser.
   public registerPlugin(name: string, plugin: ZenmlPluginLike, parser?: ZenmlParser): void {
     if (typeof plugin === "function") {
       let addedPlugin = new SimpleZenmlPlugin(plugin);

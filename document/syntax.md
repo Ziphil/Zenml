@@ -23,7 +23,7 @@ Note that an attribute value must always be enclosed in `"`, not in `'`.
 \tag|attr="value",foo="bar"|<content>
 ```
 ```xml
-<tag attr='value' foo='bar'>content</tag>
+<tag attr="value" foo="bar">content</tag>
 ```
 
 The value of an attribute may be omitted.
@@ -32,7 +32,7 @@ In this case, the resulting attribute will have the same value as its name.
 \tag|boolean|<content>
 ```
 ```xml
-<tag boolean='boolean'>content</tag>
+<tag boolean="boolean">content</tag>
 ```
 
 An empty element is denoted like `\tag<>`, but can be abbreviated to `\tag;`.
@@ -40,7 +40,7 @@ An empty element is denoted like `\tag<>`, but can be abbreviated to `\tag;`.
 \tag; \tag|attr="value"|;
 ```
 ```xml
-<tag/> <tag attr='value'/>
+<tag/> <tag attr="value"/>
 ```
 
 Of course, you can place any number of elements inside another element, as is usual in XML: 
@@ -72,8 +72,8 @@ baz = "baz"
 \tag >
 ```
 ```xml
-<tag foo='foo' bar='bar' baz='baz'>content</tag>
-<tag foo='foo'/>
+<tag foo="foo" bar="bar" baz="baz">content</tag>
+<tag foo="foo"/>
 <tag/>
 ```
 
@@ -143,7 +143,7 @@ If the first element, suffixed with `+`, has some attributes, the remaining elem
 \tag+|attr="val"|<first><second><third>
 ```
 ```xml
-<tag attr='val'>first</tag><tag attr='val'>second</tag><tag attr='val'>third</tag>
+<tag attr="val">first</tag><tag attr="val">second</tag><tag attr="val">third</tag>
 ```
 
 ### Processing instruction
@@ -152,7 +152,7 @@ The syntax for processing instructions is identical to that for normal elements,
 \xml?<version="1.0" encoding="UTF-8">
 ```
 ```xml
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="UTF-8"?>
 ```
 
 The content of processing instructions is often written in pseudo attributes.
@@ -186,7 +186,7 @@ These can be used in both text nodes and attribute values.
 `[ escaped `] \tag|attr="`"`&"|;
 ```
 ```xml
-[ escaped ] <tag attr='&quot;&amp;'/>
+[ escaped ] <tag attr="&quot;&amp;"/>
 ```
 
 ### Special tag

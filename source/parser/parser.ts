@@ -108,6 +108,12 @@ export class ZenmlParser {
     this.pluginManager.registerPluginManager(manager, this);
   }
 
+  public parse(input: string): Document {
+    this.updateDocument();
+    return this.root.tryParse(input);
+  }
+
+  /** @deprecated */
   public tryParse(input: string): Document {
     this.updateDocument();
     return this.root.tryParse(input);
