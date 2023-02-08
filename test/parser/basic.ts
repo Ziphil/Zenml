@@ -37,17 +37,21 @@ describe("elements and texts", () => {
   test("complex", () => {
     shouldEquivalent(`\\nest<text\\nest<inner>text>`, `<nest>text<nest>inner</nest>text</nest>`);
     shouldEquivalent($`
-      \\foo<\\bar<\\baz<neko>>>outer\\foo<\\bar<neko>>
-      \\foo<
-        neko\\bar<mofu>
-        neko
+      \\root<
+        \\foo<\\bar<\\baz<neko>>>outer\\foo<\\bar<neko>>
+        \\foo<
+          neko\\bar<mofu>
+          neko
+        >
       >
     `, $`
-      <foo><bar><baz>neko</baz></bar></foo>outer<foo><bar>neko</bar></foo>
-      <foo>
-        neko<bar>mofu</bar>
-        neko
-      </foo>
+      <root>
+        <foo><bar><baz>neko</baz></bar></foo>outer<foo><bar>neko</bar></foo>
+        <foo>
+          neko<bar>mofu</bar>
+          neko
+        </foo>
+      </root>
     `);
   });
 });
@@ -80,25 +84,25 @@ describe("spaces in elements", () => {
     shouldEquivalent(`\\element|attr =  "value"|;`, `<element attr="value"/>`);
   });
   test("between arguments", () => {
-    shouldEquivalent(`\\element+<one> <two>`, `<element>one</element><element>two</element>`);
-    shouldEquivalent(`\\element+<one> <two>   <three>`, `<element>one</element><element>two</element><element>three</element>`);
+    shouldEquivalent(`\\root<\\element+<one> <two>>`, `<root><element>one</element><element>two</element></root>`);
+    shouldEquivalent(`\\root<\\element+<one> <two>   <three>>`, `<root><element>one</element><element>two</element><element>three</element></root>`);
   });
   test("after slash (not allowed)", () => {
     shouldFail(`\\  element;`);
   });
   test("between element name and mark (not allowed)", () => {
-    shouldFail(`\\element +;`);
+    shouldFail(`\\root<\\element +;>`);
   });
   test("complex", () => {
     shouldEquivalent($`
-      \\element+ | foo= "foo" ,  bar = "bar" ,
+      \\root<\\element+ | foo= "foo" ,  bar = "bar" ,
         baz =  "baz"
         , qux  ="qux"
       |
       <one>
-        <two>
+        <two>>
     `, $`
-      <element foo="foo" bar="bar" baz="baz" qux="qux">one</element><element foo="foo" bar="bar" baz="baz" qux="qux">two</element>
+      <root><element foo="foo" bar="bar" baz="baz" qux="qux">one</element><element foo="foo" bar="bar" baz="baz" qux="qux">two</element></root>
     `);
   });
 });
@@ -112,7 +116,7 @@ describe("special elements", () => {
   });
   test("nested", () => {
     const options = {specialElementNames: {brace: "brace", bracket: "bracket", slash: "slash"}};
-    shouldEquivalent(`{aaa[bbb/ccc/ddd{eee}]fff}/ggg/`, `<brace>aaa<bracket>bbb<slash>ccc</slash>ddd<brace>eee</brace></bracket>fff</brace><slash>ggg</slash>`, options);
+    shouldEquivalent(`{aaa[bbb/ccc/ddd{eee}]fff/ggg/}`, `<brace>aaa<bracket>bbb<slash>ccc</slash>ddd<brace>eee</brace></bracket>fff<slash>ggg</slash></brace>`, options);
     shouldEquivalent(`{\\foo</te[xt]/outer/text/>}`, `<brace><foo><slash>te<bracket>xt</bracket></slash>outer<slash>text</slash></foo></brace>`, options);
     shouldEquivalent(`/\\foo</\\foo<ab/cd/ef>/>/`, `<slash><foo><slash><foo>ab<slash>cd</slash>ef</foo></slash></foo></slash>`, options);
   });
@@ -127,7 +131,7 @@ describe("special elements", () => {
 describe("marks", () => {
   test("verbal", () => {
     shouldEquivalent(`\\foo~<&#;>`, `<foo>&amp;#;</foo>`);
-    shouldEquivalent(`\\foo~<\\fake|attr="val"|<fake\`>>`, `<foo>\\fake|attr="val"|&lt;fake></foo>`);
+    shouldEquivalent(`\\foo~<\\fake|attr="val"|<fake\`>>`, `<foo>\\fake|attr="val"|&lt;fake&gt;</foo>`);
   });
   test("trim", () => {
     shouldEquivalent($`
@@ -158,9 +162,9 @@ describe("marks", () => {
     `);
   });
   test("multiple", () => {
-    shouldEquivalent(`\\foo+<1><2><3>`, `<foo>1</foo><foo>2</foo><foo>3</foo>`);
-    shouldEquivalent(`\\foo+|attr="value"|<1><2>`, `<foo attr="value">1</foo><foo attr="value">2</foo>`);
-    shouldEquivalent(`\\foo+;`, `<foo/>`);
+    shouldEquivalent(`\\root<\\foo+<1><2><3>>`, `<root><foo>1</foo><foo>2</foo><foo>3</foo></root>`);
+    shouldEquivalent(`\\root<\\foo+|attr="value"|<1><2>>`, `<root><foo attr="value">1</foo><foo attr="value">2</foo></root>`);
+    shouldEquivalent(`\\root<\\foo+;>`, `<root><foo/></root>`);
   });
 });
 
@@ -255,11 +259,11 @@ describe("line comments", () => {
 
 describe("escapes", () => {
   test("in texts", () => {
-    shouldEquivalent("`& `< `> `; `' `\" `{ `} `[ `] `/ `\\ `| `` `#", "&amp; &lt; > ; ' \" { } [ ] / \\ | ` #");
-    shouldEquivalent("\\foo<`>>", "<foo>></foo>");
+    shouldEquivalent("`& `< `> `; `' `\" `{ `} `[ `] `/ `\\ `| `` `#", "&amp; &lt; &gt; ; ' \" { } [ ] / \\ | ` #");
+    shouldEquivalent("\\foo<`>>", "<foo>&gt;</foo>");
   });
   test("in strings", () => {
-    shouldEquivalent("\\foo|attr=\"`& `< `> `' `\" `{ `} `[ `] `/ `\\ `| `` `# `;\"|;", "<foo attr=\"&amp; &lt; > ' &quot; { } [ ] / \\ | ` # ;\"/>");
+    shouldEquivalent("\\foo|attr=\"`& `< `> `; `' `\" `{ `} `[ `] `/ `\\ `| `` `#\"|;", "<foo attr=\"&amp; &lt; &gt; ; ' &quot; { } [ ] / \\ | ` #\"/>");
   });
   test("invalid in texts", () => {
     shouldFail("`@");

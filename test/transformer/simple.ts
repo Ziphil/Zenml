@@ -11,6 +11,8 @@ import {
 } from "../../source";
 
 
+const parser = new DOMParser();
+
 function createTransformer(callback?: (transformer: SimpleTransformer<SimpleDocument>) => unknown): SimpleTransformer<SimpleDocument> {
   const transformer = new SimpleTransformer(() => new SimpleDocument());
   if (callback !== undefined) {
@@ -20,7 +22,6 @@ function createTransformer(callback?: (transformer: SimpleTransformer<SimpleDocu
 }
 
 export function shouldEquivalent(input: string, output: string, callback?: (transformer: SimpleTransformer<SimpleDocument>) => unknown): void {
-  const parser = new DOMParser();
   const transformer = createTransformer(callback);
   expect(transformer.transform(parser.parseFromString(input)).toString()).toBe(output);
 }
@@ -89,7 +90,7 @@ describe("transformation of simple documents", () => {
 
 describe("patterns", () => {
   test("string", () => {
-    shouldEquivalent(`<foo/>`, `<foo-tr/>`, (transformer) => {
+    shouldEquivalent(`<foo><foo/><bar/></foo>`, `<foo-tr><foo-tr/></foo-tr>`, (transformer) => {
       transformer.registerElementRule("foo", true, (transformer, document) => {
         const self = document.createDocumentFragment();
         self.appendElement("foo-tr", (self) => {
@@ -100,7 +101,7 @@ describe("patterns", () => {
     });
   });
   test("boolean", () => {
-    shouldEquivalent(`<foo/><bar/><baz/>`, `<foo-tr/><bar-tr/><baz-tr/>`, (transformer) => {
+    shouldEquivalent(`<qux><foo/><bar/><baz/></qux>`, `<qux-tr><foo-tr/><bar-tr/><baz-tr/></qux-tr>`, (transformer) => {
       transformer.registerElementRule(true, true, (transformer, document, element) => {
         const self = document.createDocumentFragment();
         self.appendElement(`${element.tagName}-tr`, (self) => {
@@ -111,7 +112,7 @@ describe("patterns", () => {
     });
   });
   test("regexp", () => {
-    shouldEquivalent(`<foo/><foobar/><bar/>`, `<foo-tr/><foobar-tr/>`, (transformer) => {
+    shouldEquivalent(`<foo><foo/><foobar/><bar/></foo>`, `<foo-tr><foo-tr/><foobar-tr/></foo-tr>`, (transformer) => {
       transformer.registerElementRule(/^foo/, true, (transformer, document, element) => {
         const self = document.createDocumentFragment();
         self.appendElement(`${element.tagName}-tr`, (self) => {
@@ -122,7 +123,7 @@ describe("patterns", () => {
     });
   });
   test("function", () => {
-    shouldEquivalent(`<foo/><bar/><neko/>`, `<foo-tr/><bar-tr/>`, (transformer) => {
+    shouldEquivalent(`<qux><foo/><bar/><neko/></qux>`, `<qux-tr><foo-tr/><bar-tr/></qux-tr>`, (transformer) => {
       transformer.registerElementRule((tagName) => tagName.length === 3, true, (transformer, document, element) => {
         const self = document.createDocumentFragment();
         self.appendElement(`${element.tagName}-tr`, (self) => {
@@ -133,7 +134,7 @@ describe("patterns", () => {
     });
   });
   test("multiple", () => {
-    shouldEquivalent(`<foo/><foooo/><bar/><baz/><neko/>`, `<foo-tr/><bar-tr/><neko-tr/>`, (transformer) => {
+    shouldEquivalent(`<foo><foo/><foooo/><bar/><baz/><neko/></foo>`, `<foo-tr><foo-tr/><bar-tr/><neko-tr/></foo-tr>`, (transformer) => {
       transformer.registerElementRule(["foo", /^b.r$/, (tagName) => tagName.length === 4], true, (transformer, document, element) => {
         const self = document.createDocumentFragment();
         self.appendElement(`${element.tagName}-tr`, (self) => {

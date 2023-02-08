@@ -60,6 +60,7 @@ describe("macros and plugins", () => {
     const plugin = new TestZenmlPlugin();
     shouldEquivalent(`&macro<42>`, `<macro><digits>42</digits></macro>`, {}, (parser) => parser.registerPlugin("macro", plugin));
     shouldEquivalent(`&macro<100><200>`, `<macro><digits>100</digits></macro>`, {}, (parser) => parser.registerPlugin("macro", plugin));
+    shouldEquivalent(`\\root<&macro<100><200>>`, `<root><macro><digits>100</digits></macro></root>`, {}, (parser) => parser.registerPlugin("macro", plugin));
     shouldFail(`&macro<nondigits>`, {}, (parser) => parser.registerPlugin("macro", plugin));
   });
   test("simple plugin", () => {
@@ -90,6 +91,7 @@ describe("registration of plugins", () => {
       const element = builder.createElement(tagName);
       return [element];
     });
-    shouldEquivalent(`&macro<42>&func<inner>`, `<macro><digits>42</digits></macro><func/>`, {}, (parser) => parser.registerPluginManager(manager));
+    shouldEquivalent(`&macro<42>`, `<macro><digits>42</digits></macro>`, {}, (parser) => parser.registerPluginManager(manager));
+    shouldEquivalent(`&func<inner>`, `<func/>`, {}, (parser) => parser.registerPluginManager(manager));
   });
 });

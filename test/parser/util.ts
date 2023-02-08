@@ -23,10 +23,10 @@ function createParser(options?: ZenmlParserOptions, callback?: (parser: ZenmlPar
 
 export function shouldEquivalent(input: string, output: string, options?: ZenmlParserOptions, callback?: (parser: ZenmlParser) => unknown): void {
   const parser = createParser(options, callback);
-  expect(serializer.serializeToString(parser.tryParse(input))).toBe(output);
+  expect(serializer.serializeToString(parser.parse(input))).toBe(output);
 }
 
 export function shouldFail(input: string, options?: ZenmlParserOptions, callback?: (parser: ZenmlParser) => unknown): void {
   const parser = createParser(options, callback);
-  expect(() => parser.tryParse(input)).toThrow();
+  expect(() => parser.parse(input)).toThrow();
 }
