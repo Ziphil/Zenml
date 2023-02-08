@@ -43,19 +43,19 @@ export abstract class BaseDocument<D extends BaseDocument<D, F, E, T>, F extends
   protected abstract prepareTextNode(content: string): T;
 
   public createDocumentFragment(callback?: NodeCallback<F>): F {
-    let fragment = this.prepareDocumentFragment();
+    const fragment = this.prepareDocumentFragment();
     callback?.call(this, fragment);
     return fragment;
   }
 
   public createElement(tagName: string, callback?: NodeCallback<E>): E {
-    let element = this.prepareElement(tagName);
+    const element = this.prepareElement(tagName);
     callback?.call(this, element);
     return element;
   }
 
   public createTextNode(content: string, callback?: NodeCallback<T>): T {
-    let text = this.prepareTextNode(content);
+    const text = this.prepareTextNode(content);
     callback?.call(this, text);
     return text;
   }

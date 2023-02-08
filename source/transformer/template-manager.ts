@@ -47,22 +47,22 @@ export class TemplateManager<D extends SuperDocumentLike<D>, C = AnyObject, V = 
   }
 
   public regsiterTemplateManager(manager: TemplateManager<D, C, V>): void {
-    for (let addedRule of manager.elementRules) {
+    for (const addedRule of manager.elementRules) {
       this.elementRules.push(addedRule);
     }
-    for (let addedRule of manager.textRules) {
+    for (const addedRule of manager.textRules) {
       this.textRules.push(addedRule);
     }
-    for (let [addedName, addedFactory] of manager.elementFactories) {
+    for (const [addedName, addedFactory] of manager.elementFactories) {
       this.elementFactories.set(addedName, addedFactory);
     }
-    for (let [addedName, addedFactory] of manager.textFactories) {
+    for (const [addedName, addedFactory] of manager.textFactories) {
       this.textFactories.set(addedName, addedFactory);
     }
   }
 
   public findElementRule(tagName: string, scope: string): TemplateRule<D, C, V, Element> | null {
-    for (let [tagNamePattern, scopePattern, rule] of this.elementRules) {
+    for (const [tagNamePattern, scopePattern, rule] of this.elementRules) {
       if (matchString(tagName, tagNamePattern) && matchString(scope, scopePattern)) {
         return rule;
       }
@@ -71,7 +71,7 @@ export class TemplateManager<D extends SuperDocumentLike<D>, C = AnyObject, V = 
   }
 
   public findTextRule(scope: string): TemplateRule<D, C, V, Text> | null {
-    for (let [scopePattern, rule] of this.textRules) {
+    for (const [scopePattern, rule] of this.textRules) {
       if (matchString(scope, scopePattern)) {
         return rule;
       }

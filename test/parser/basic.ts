@@ -105,19 +105,19 @@ describe("spaces in elements", () => {
 
 describe("special elements", () => {
   test("basic", () => {
-    let options = {specialElementNames: {brace: "brace", bracket: "bracket", slash: "slash"}};
+    const options = {specialElementNames: {brace: "brace", bracket: "bracket", slash: "slash"}};
     shouldEquivalent(`{text}`, `<brace>text</brace>`, options);
     shouldEquivalent(`[text]`, `<bracket>text</bracket>`, options);
     shouldEquivalent(`/text/`, `<slash>text</slash>`, options);
   });
   test("nested", () => {
-    let options = {specialElementNames: {brace: "brace", bracket: "bracket", slash: "slash"}};
+    const options = {specialElementNames: {brace: "brace", bracket: "bracket", slash: "slash"}};
     shouldEquivalent(`{aaa[bbb/ccc/ddd{eee}]fff}/ggg/`, `<brace>aaa<bracket>bbb<slash>ccc</slash>ddd<brace>eee</brace></bracket>fff</brace><slash>ggg</slash>`, options);
     shouldEquivalent(`{\\foo</te[xt]/outer/text/>}`, `<brace><foo><slash>te<bracket>xt</bracket></slash>outer<slash>text</slash></foo></brace>`, options);
     shouldEquivalent(`/\\foo</\\foo<ab/cd/ef>/>/`, `<slash><foo><slash><foo>ab<slash>cd</slash>ef</foo></slash></foo></slash>`, options);
   });
   test("partly specified", () => {
-    let options = {specialElementNames: {brace: "brace"}};
+    const options = {specialElementNames: {brace: "brace"}};
     shouldEquivalent(`{text}`, `<brace>text</brace>`, options);
     shouldFail(`[text]`, options);
     shouldFail(`/text/`, options);
@@ -166,7 +166,7 @@ describe("marks", () => {
 
 describe("macros", () => {
   test("unregistered macros", () => {
-    let plugin = new SimpleZenmlPlugin(() => []);
+    const plugin = new SimpleZenmlPlugin(() => []);
     shouldFail(`&unregistered<42>`, {}, (parser) => parser.registerPlugin("macro", plugin));
   });
 });

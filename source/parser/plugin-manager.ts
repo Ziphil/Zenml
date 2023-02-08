@@ -20,7 +20,7 @@ export class ZenmlPluginManager {
 
   public registerPlugin(name: string, plugin: ZenmlPluginLike, parser?: ZenmlParser): void {
     if (typeof plugin === "function") {
-      let addedPlugin = new SimpleZenmlPlugin(plugin);
+      const addedPlugin = new SimpleZenmlPlugin(plugin);
       this.plugins.set(name, addedPlugin);
       if (parser !== undefined) {
         addedPlugin.initialize(parser);
@@ -34,7 +34,7 @@ export class ZenmlPluginManager {
   }
 
   public registerPluginManager(manager: ZenmlPluginManager, parser?: ZenmlParser): void {
-    for (let [addedName, addedPlugin] of manager.plugins) {
+    for (const [addedName, addedPlugin] of manager.plugins) {
       this.plugins.set(addedName, addedPlugin);
       if (parser !== undefined) {
         addedPlugin.initialize(parser);
@@ -43,7 +43,7 @@ export class ZenmlPluginManager {
   }
 
   public updateDocument(document: Document): void {
-    for (let [, plugin] of this.plugins) {
+    for (const [, plugin] of this.plugins) {
       plugin.updateDocument(document);
     }
   }

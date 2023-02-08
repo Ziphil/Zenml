@@ -8,21 +8,21 @@ import {
 
 describe("stringification", () => {
   test("elements and texts 1", () => {
-    let document = new SimpleDocument({includeDeclaration: false});
+    const document = new SimpleDocument({includeDeclaration: false});
     document.appendElement("element", (self) => {
       self.appendElement("inner");
     });
     expect(document.toString()).toBe(`<element><inner/></element>`);
   });
   test("elements and texts 2", () => {
-    let document = new SimpleDocument({includeDeclaration: false});
+    const document = new SimpleDocument({includeDeclaration: false});
     document.appendElement("element", (self) => {
       self.appendTextNode("text");
     });
     expect(document.toString()).toBe(`<element>text</element>`);
   });
   test("attributes", () => {
-    let document = new SimpleDocument({includeDeclaration: false});
+    const document = new SimpleDocument({includeDeclaration: false});
     document.appendElement("element", (self) => {
       self.setAttribute("attr", "val");
       self.setAttribute("foo", "bar");
@@ -30,7 +30,7 @@ describe("stringification", () => {
     expect(document.toString()).toBe(`<element attr="val" foo="bar"/>`);
   });
   test("xml declaration", () => {
-    let document = new SimpleDocument({includeDeclaration: true});
+    const document = new SimpleDocument({includeDeclaration: true});
     document.appendElement("element", (self) => {
       self.appendTextNode("text");
     });
@@ -40,21 +40,21 @@ describe("stringification", () => {
     `);
   });
   test("escapes in texts", () => {
-    let document = new SimpleDocument({includeDeclaration: false});
+    const document = new SimpleDocument({includeDeclaration: false});
     document.appendElement("element", (self) => {
       self.appendTextNode("< > & \" '");
     });
     expect(document.toString()).toBe(`<element>&lt; &gt; &amp; &quot; &apos;</element>`);
   });
   test("escapes in attribute values", () => {
-    let document = new SimpleDocument({includeDeclaration: false});
+    const document = new SimpleDocument({includeDeclaration: false});
     document.appendElement("element", (self) => {
       self.setAttribute("attr", "< > & \" '");
     });
     expect(document.toString()).toBe(`<element attr="&lt; &gt; &amp; &quot; &apos;"/>`);
   });
   test("raw texts", () => {
-    let document = new SimpleDocument({includeDeclaration: false});
+    const document = new SimpleDocument({includeDeclaration: false});
     document.appendElement("element", (self) => {
       self.appendChild(document.createTextNode("<raw>&amp;</raw>", (self) => {
         self.options.raw = true;
@@ -66,7 +66,7 @@ describe("stringification", () => {
 
 describe("stringification in html mode", () => {
   test("empty elements", () => {
-    let document = new SimpleDocument({includeDeclaration: false, html: true});
+    const document = new SimpleDocument({includeDeclaration: false, html: true});
     document.appendElement("element", (self) => {
       self.appendElement("inner");
     });
@@ -74,7 +74,7 @@ describe("stringification in html mode", () => {
     expect(document.toString()).not.toBe(`<element><inner/></element>`);
   });
   test("void elements 1", () => {
-    let document = new SimpleDocument({includeDeclaration: false, html: true});
+    const document = new SimpleDocument({includeDeclaration: false, html: true});
     document.appendElement("br");
     document.appendElement("hr");
     expect(document.toString()).toBe(`<br><hr>`);
@@ -82,7 +82,7 @@ describe("stringification in html mode", () => {
     expect(document.toString()).not.toBe(`<br></br><hr></hr>`);
   });
   test("void elements 2", () => {
-    let document = new SimpleDocument({includeDeclaration: false, html: true});
+    const document = new SimpleDocument({includeDeclaration: false, html: true});
     document.appendElement("img", (self) => {
       self.setAttribute("src", "foo");
     });
@@ -94,7 +94,7 @@ describe("stringification in html mode", () => {
     expect(document.toString()).not.toBe(`<img src="foo"></img><input type="text"></input>`);
   });
   test("void elements with children", () => {
-    let document = new SimpleDocument({includeDeclaration: false, html: true});
+    const document = new SimpleDocument({includeDeclaration: false, html: true});
     document.appendElement("hr", (self) => {
       self.appendTextNode("text");
     });
@@ -105,7 +105,7 @@ describe("stringification in html mode", () => {
     expect(document.toString()).not.toBe(`<hr>text</hr><img><span></span></img>`);
   });
   test("html declaration", () => {
-    let document = new SimpleDocument({includeDeclaration: true, html: true});
+    const document = new SimpleDocument({includeDeclaration: true, html: true});
     document.appendElement("element", (self) => {
       self.appendTextNode("text");
     });

@@ -10,9 +10,9 @@ export function isText(node: Node): node is Text {
 }
 
 export function getDescendantTexts(element: Element): Array<Text> {
-  let texts = [] as Array<Text>;
+  const texts = [] as Array<Text>;
   for (let i = 0 ; i < element.childNodes.length ; i ++) {
-    let child = element.childNodes.item(i);
+    const child = element.childNodes.item(i);
     if (isText(child)) {
       texts.push(child);
     } else if (isElement(child)) {
@@ -23,16 +23,16 @@ export function getDescendantTexts(element: Element): Array<Text> {
 }
 
 export function dedentDescendants(nodes: Array<Node>): void {
-  let texts = [];
+  const texts = [];
   if (nodes.length >= 1) {
-    let firstNode = nodes[0];
-    let lastNode = nodes[nodes.length - 1];
+    const firstNode = nodes[0];
+    const lastNode = nodes[nodes.length - 1];
     if (isText(lastNode)) {
-      let lastNodeContent = lastNode.data.replace(/[\x20\r\n]+$/, "");
+      const lastNodeContent = lastNode.data.replace(/[\x20\r\n]+$/, "");
       lastNode.data = lastNodeContent;
       lastNode.nodeValue = lastNodeContent;
     }
-    for (let node of nodes) {
+    for (const node of nodes) {
       if (isText(node)) {
         texts.push(node);
       } else if (isElement(node)) {
@@ -40,8 +40,8 @@ export function dedentDescendants(nodes: Array<Node>): void {
       }
     }
     let indentLength = 100000;
-    for (let text of texts) {
-      let regexp = /(\r\n|\n|\r)(\x20+)/g;
+    for (const text of texts) {
+      const regexp = /(\r\n|\n|\r)(\x20+)/g;
       let match;
       while ((match = regexp.exec(text.data)) !== null) {
         if (match[2].length < indentLength) {
@@ -49,13 +49,13 @@ export function dedentDescendants(nodes: Array<Node>): void {
         }
       }
     }
-    for (let text of texts) {
-      let textContent = text.data.replace(/(\r\n|\n|\r)(\x20+)/g, (match, breakString, spaceString) => breakString + " ".repeat(spaceString.length - indentLength));
+    for (const text of texts) {
+      const textContent = text.data.replace(/(\r\n|\n|\r)(\x20+)/g, (match, breakString, spaceString) => breakString + " ".repeat(spaceString.length - indentLength));
       text.data = textContent;
       text.nodeValue = textContent;
     }
     if (isText(firstNode)) {
-      let firstNodeContent = firstNode.data.replace(/^[\x20\r\n]+/, "");
+      const firstNodeContent = firstNode.data.replace(/^[\x20\r\n]+/, "");
       firstNode.data = firstNodeContent;
       firstNode.nodeValue = firstNodeContent;
     }
