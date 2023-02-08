@@ -26,10 +26,10 @@ const xmlString = serializer.serializeToString(document);
 import {DOMImplementation, DOMParser} from "@xmldom/xmldom";
 import {ZenmlSerializer} from "@zenml/zenml";
 
-const serializer = new ZenmlSerializer();   // create a serialiser
+const serializer = new ZenmlSerializer();  // create a serialiser
 
 // use the usual XML parser to get an XML document object
-const xmlString = "<element>text</element>"  // some XML string
+const xmlString = "<element>text</element>";  // some XML string
 const parser = new DOMParser();
 const document = parser.parseFromString(xmlString, "text/xml");
 
