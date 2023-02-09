@@ -54,11 +54,11 @@ export class ZenmlSerializer {
   }
 
   private serializeAttribute(attribute: Attr): string {
-    return `${attribute.name}="${this.escape(attribute.value)}"`;
+    return `${attribute.name}="${this.escapeString(attribute.value)}"`;
   }
 
   private serializeText(text: Text): string {
-    return this.escape(text.data ?? "");
+    return this.escapeText(text.data ?? "");
   }
 
   private serializeProcessingInstruction(instruction: ProcessingInstruction): string {
@@ -67,7 +67,7 @@ export class ZenmlSerializer {
     const data = instruction.data;
     output += `\\${tagName}?`;
     if (data !== "") {
-      output += "<" + this.escape(data) + ">";
+      output += "<" + this.escapeText(data) + ">";
     } else {
       output += ";";
     }
@@ -93,8 +93,12 @@ export class ZenmlSerializer {
     return "#<" + (comment.data ?? "").replace(/>/g, "") + ">";
   }
 
-  private escape(text: string): string {
-    return text.replace(/[&<>;'"{}\[\]/\\|`#]/g, (char) => `\`${char}`);
+  private escapeString(string: string): string {
+    return string.replace(/["`]/g, (char) => `\`${char}`);
+  }
+
+  private escapeText(string: string): string {
+    return string.replace(/[\\&`<>;#{}\[\]/]/g, (char) => `\`${char}`);
   }
 
 }

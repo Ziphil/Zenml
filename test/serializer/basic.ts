@@ -35,6 +35,9 @@ describe("elements and texts", () => {
     shouldEquivalent(`\\element;`, `<element/>`);
     shouldEquivalent(`\\element|attr="value"|;`, `<element attr="value"/>`);
   });
+  test("processing instructions", () => {
+    shouldEquivalent(`\\xml?<version="1.0" encoding="UTF-8">`, `<?xml version="1.0" encoding="UTF-8"?>`);
+  });
   test("complex", () => {
     shouldEquivalent(`\\nest<text\\nest<inner>text>`, `<nest>text<nest>inner</nest>text</nest>`);
     shouldEquivalent($`
