@@ -259,11 +259,11 @@ describe("line comments", () => {
 
 describe("escapes", () => {
   test("in texts", () => {
-    shouldEquivalent("`& `< `> `; `' `\" `{ `} `[ `] `/ `\\ `| `` `#", "&amp; &lt; &gt; ; ' \" { } [ ] / \\ | ` #");
+    shouldEquivalent("`& `< `> `; `\" `{ `} `[ `] `/ `\\ `| `` `#", "&amp; &lt; &gt; ; \" { } [ ] / \\ | ` #");
     shouldEquivalent("\\foo<`>>", "<foo>&gt;</foo>");
   });
   test("in strings", () => {
-    shouldEquivalent("\\foo|attr=\"`& `< `> `; `' `\" `{ `} `[ `] `/ `\\ `| `` `#\"|;", "<foo attr=\"&amp; &lt; &gt; ; ' &quot; { } [ ] / \\ | ` #\"/>");
+    shouldEquivalent("\\foo|attr=\"`& `< `> `; `\" `{ `} `[ `] `/ `\\ `| `` `#\"|;", "<foo attr=\"&amp; &lt; &gt; ; &quot; { } [ ] / \\ | ` #\"/>");
   });
   test("invalid in texts", () => {
     shouldFail("`@");

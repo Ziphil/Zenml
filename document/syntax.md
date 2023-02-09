@@ -178,7 +178,7 @@ Thus, for example, `\zml?<version="1.1">` is not valid.
 ### Escape characters
 The following symbols can be escaped by prefixing them with `` ` ``.
 
-- `&`, `<`, `>`, `;`, `'`, `"`, `{`, `}`, `[`, `]`, `/`, `\`, `|`, `` ` ``, `#`
+- `&`, `<`, `>`, `;`, `"`, `{`, `}`, `[`, `]`, `/`, `\`, `|`, `` ` ``, `#`
 
 These can be used in both text nodes and attribute values.
 

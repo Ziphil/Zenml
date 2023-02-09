@@ -43,7 +43,7 @@ const SPECIAL_ELEMENT_ENDS = {brace: "}", bracket: "]", slash: "/"} as const;
 const COMMENT_DELIMITER = "#";
 const SYSTEM_INSTRUCTION_NAME = "zml";
 const MARK_CHARS = {instruction: "?", trim: "*", verbal: "~", multiple: "+"} as const;
-const ESCAPE_CHARS = ["&", "<", ">", ";", "'", "\"", "{", "}", "[", "]", "/", "\\", "|", "`", "#"];
+const ESCAPE_CHARS = ["&", "<", ">", ";", "\"", "{", "}", "[", "]", "/", "\\", "|", "`", "#"];
 const SPACE_CHARS = ["\u{20}", "\u{9}", "\u{D}", "\u{A}"];
 const FIRST_IDENTIFIER_CHAR_RANGES = [
   [0x3A, 0x3A], [0x5F, 0x5F],
