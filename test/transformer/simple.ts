@@ -11,8 +11,10 @@ import {
 } from "../../source";
 
 
+const parser = new DOMParser();
+
 function createTransformer(callback?: (transformer: SimpleTransformer<SimpleDocument>) => unknown): SimpleTransformer<SimpleDocument> {
-  let transformer = new SimpleTransformer(() => new SimpleDocument());
+  const transformer = new SimpleTransformer(() => new SimpleDocument());
   if (callback !== undefined) {
     callback(transformer);
   }
@@ -20,8 +22,7 @@ function createTransformer(callback?: (transformer: SimpleTransformer<SimpleDocu
 }
 
 export function shouldEquivalent(input: string, output: string, callback?: (transformer: SimpleTransformer<SimpleDocument>) => unknown): void {
-  let parser = new DOMParser();
-  let transformer = createTransformer(callback);
+  const transformer = createTransformer(callback);
   expect(transformer.transform(parser.parseFromString(input)).toString()).toBe(output);
 }
 
@@ -37,21 +38,21 @@ describe("transformation of simple documents", () => {
       </foo-tr>
     `, (transformer) => {
       transformer.registerElementRule("foo", true, (transformer, document) => {
-        let self = document.createDocumentFragment();
+        const self = document.createDocumentFragment();
         self.appendElement("foo-tr", (self) => {
           self.appendChild(transformer.apply());
         });
         return self;
       });
       transformer.registerElementRule("bar", true, (transformer, document) => {
-        let self = document.createDocumentFragment();
+        const self = document.createDocumentFragment();
         self.appendElement("bar-tr", (self) => {
           self.appendChild(transformer.apply());
         });
         return self;
       });
       transformer.registerTextRule(true, (transformer, document, text) => {
-        let self = document.createTextNode(text.data);
+        const self = document.createTextNode(text.data);
         return self;
       });
     });
@@ -67,7 +68,7 @@ describe("transformation of simple documents", () => {
       <fac/></foo-tr>
     `, (transformer) => {
       transformer.registerElementRule("foo", true, (transformer, document) => {
-        let self = document.createDocumentFragment();
+        const self = document.createDocumentFragment();
         self.appendElement("foo-tr", (self) => {
           self.appendChild(transformer.apply());
           self.appendChild(transformer.call("fac"));
@@ -75,12 +76,12 @@ describe("transformation of simple documents", () => {
         return self;
       });
       transformer.registerElementFactory("fac", (transformer, document) => {
-        let self = document.createDocumentFragment();
+        const self = document.createDocumentFragment();
         self.appendElement("fac");
         return self;
       });
       transformer.registerTextRule(true, (transformer, document, text) => {
-        let self = document.createTextNode(text.data);
+        const self = document.createTextNode(text.data);
         return self;
       });
     });
@@ -89,9 +90,9 @@ describe("transformation of simple documents", () => {
 
 describe("patterns", () => {
   test("string", () => {
-    shouldEquivalent(`<foo/>`, `<foo-tr/>`, (transformer) => {
+    shouldEquivalent(`<foo><foo/><bar/></foo>`, `<foo-tr><foo-tr/></foo-tr>`, (transformer) => {
       transformer.registerElementRule("foo", true, (transformer, document) => {
-        let self = document.createDocumentFragment();
+        const self = document.createDocumentFragment();
         self.appendElement("foo-tr", (self) => {
           self.appendChild(transformer.apply());
         });
@@ -100,9 +101,9 @@ describe("patterns", () => {
     });
   });
   test("boolean", () => {
-    shouldEquivalent(`<foo/><bar/><baz/>`, `<foo-tr/><bar-tr/><baz-tr/>`, (transformer) => {
+    shouldEquivalent(`<qux><foo/><bar/><baz/></qux>`, `<qux-tr><foo-tr/><bar-tr/><baz-tr/></qux-tr>`, (transformer) => {
       transformer.registerElementRule(true, true, (transformer, document, element) => {
-        let self = document.createDocumentFragment();
+        const self = document.createDocumentFragment();
         self.appendElement(`${element.tagName}-tr`, (self) => {
           self.appendChild(transformer.apply());
         });
@@ -111,9 +112,9 @@ describe("patterns", () => {
     });
   });
   test("regexp", () => {
-    shouldEquivalent(`<foo/><foobar/><bar/>`, `<foo-tr/><foobar-tr/>`, (transformer) => {
+    shouldEquivalent(`<foo><foo/><foobar/><bar/></foo>`, `<foo-tr><foo-tr/><foobar-tr/></foo-tr>`, (transformer) => {
       transformer.registerElementRule(/^foo/, true, (transformer, document, element) => {
-        let self = document.createDocumentFragment();
+        const self = document.createDocumentFragment();
         self.appendElement(`${element.tagName}-tr`, (self) => {
           self.appendChild(transformer.apply());
         });
@@ -122,9 +123,9 @@ describe("patterns", () => {
     });
   });
   test("function", () => {
-    shouldEquivalent(`<foo/><bar/><neko/>`, `<foo-tr/><bar-tr/>`, (transformer) => {
+    shouldEquivalent(`<qux><foo/><bar/><neko/></qux>`, `<qux-tr><foo-tr/><bar-tr/></qux-tr>`, (transformer) => {
       transformer.registerElementRule((tagName) => tagName.length === 3, true, (transformer, document, element) => {
-        let self = document.createDocumentFragment();
+        const self = document.createDocumentFragment();
         self.appendElement(`${element.tagName}-tr`, (self) => {
           self.appendChild(transformer.apply());
         });
@@ -133,9 +134,9 @@ describe("patterns", () => {
     });
   });
   test("multiple", () => {
-    shouldEquivalent(`<foo/><foooo/><bar/><baz/><neko/>`, `<foo-tr/><bar-tr/><neko-tr/>`, (transformer) => {
+    shouldEquivalent(`<foo><foo/><foooo/><bar/><baz/><neko/></foo>`, `<foo-tr><foo-tr/><bar-tr/><neko-tr/></foo-tr>`, (transformer) => {
       transformer.registerElementRule(["foo", /^b.r$/, (tagName) => tagName.length === 4], true, (transformer, document, element) => {
-        let self = document.createDocumentFragment();
+        const self = document.createDocumentFragment();
         self.appendElement(`${element.tagName}-tr`, (self) => {
           self.appendChild(transformer.apply());
         });
@@ -147,9 +148,9 @@ describe("patterns", () => {
 
 describe("registration of templates", () => {
   test("via template manager", () => {
-    let manager = new TemplateManager<SimpleDocument>();
+    const manager = new TemplateManager<SimpleDocument>();
     manager.registerElementRule("foo", true, (transformer, document) => {
-      let self = document.createDocumentFragment();
+      const self = document.createDocumentFragment();
       self.appendElement("foo-tr", (self) => {
         self.appendChild(transformer.apply());
         self.appendChild(transformer.call("fac"));
@@ -157,18 +158,18 @@ describe("registration of templates", () => {
       return self;
     });
     manager.registerElementFactory("fac", (transformer, document) => {
-      let self = document.createDocumentFragment();
+      const self = document.createDocumentFragment();
       self.appendElement("fac");
       return self;
     });
     manager.registerTextRule(true, (transformer, document, text) => {
-      let self = document.createDocumentFragment();
+      const self = document.createDocumentFragment();
       self.appendTextNode(text.data);
       self.appendChild(transformer.call("textfac"));
       return self;
     });
     manager.registerTextFactory("textfac", (transformer, document, text) => {
-      let self = document.createTextNode("textfac");
+      const self = document.createTextNode("textfac");
       return self;
     });
     shouldEquivalent(`<foo>text</foo>`, `<foo-tr>texttextfac<fac/></foo-tr>`, (transformer) => transformer.regsiterTemplateManager(manager));

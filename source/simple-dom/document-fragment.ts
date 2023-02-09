@@ -33,27 +33,27 @@ export class BaseDocumentFragment<D extends BaseDocument<D, F, E, T>, F extends 
     if (child instanceof BaseDocumentFragment) {
       this.nodes.push(...child.nodes);
     } else {
-      let castChild = child as E | T;
+      const castChild = child as E | T;
       this.nodes.push(castChild);
     }
     return child;
   }
 
   public appendElement(tagName: string, callback?: NodeCallback<E>): E {
-    let element = this.document.createElement(tagName);
+    const element = this.document.createElement(tagName);
     this.appendChild(element, callback);
     return element;
   }
 
   public appendTextNode(content: string, callback?: NodeCallback<T>): T {
-    let text = this.document.createTextNode(content);
+    const text = this.document.createTextNode(content);
     this.appendChild(text, callback);
     return text;
   }
 
   public toString(): string {
     let string = "";
-    for (let node of this.nodes) {
+    for (const node of this.nodes) {
       string += node.toString();
     }
     return string;

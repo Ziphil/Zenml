@@ -8,8 +8,8 @@ import {
 
 
 export function createBuilder(options?: BaseDocumentOptions): [SimpleDocument, SimpleBuilder] {
-  let document = new SimpleDocument(options);
-  let builder = new SimpleBuilder(document);
+  const document = new SimpleDocument(options);
+  const builder = new SimpleBuilder(document);
   return [document, builder];
 }
 
@@ -19,7 +19,7 @@ export function shouldEquivalent(input: SimpleDocument, output: string): void {
 
 describe("simple document builder (method style)", () => {
   test("simple 1", () => {
-    let document = new SimpleDocument({includeDeclaration: false});
+    const document = new SimpleDocument({includeDeclaration: false});
     document.appendElement("root", (self) => {
       self.appendElement("first");
       self.appendElement("second");
@@ -27,7 +27,7 @@ describe("simple document builder (method style)", () => {
     shouldEquivalent(document, `<root><first/><second/></root>`);
   });
   test("simple 2", () => {
-    let document = new SimpleDocument({includeDeclaration: false});
+    const document = new SimpleDocument({includeDeclaration: false});
     document.appendElement("root", (self) => {
       self.appendElement("first", (self) => {
         self.appendTextNode("text");
@@ -37,8 +37,8 @@ describe("simple document builder (method style)", () => {
     shouldEquivalent(document, `<root><first>text</first>foo</root>`);
   });
   test("fragment", () => {
-    let document = new SimpleDocument({includeDeclaration: false});
-    let fragment = document.createDocumentFragment();
+    const document = new SimpleDocument({includeDeclaration: false});
+    const fragment = document.createDocumentFragment();
     fragment.appendElement("first", (self) => {
       self.appendElement("inner");
     });
@@ -56,7 +56,7 @@ describe("simple document builder (method style)", () => {
 
 describe("simple document builder (builder style)", () => {
   test("simple 1", () => {
-    let [document, builder] = createBuilder({includeDeclaration: false});
+    const [document, builder] = createBuilder({includeDeclaration: false});
     builder.appendElement(document, "root", (self) => {
       builder.appendElement(self, "first");
       builder.appendElement(self, "second");
@@ -64,7 +64,7 @@ describe("simple document builder (builder style)", () => {
     shouldEquivalent(document, `<root><first/><second/></root>`);
   });
   test("simple 2", () => {
-    let [document, builder] = createBuilder({includeDeclaration: false});
+    const [document, builder] = createBuilder({includeDeclaration: false});
     builder.appendElement(document, "root", (self) => {
       builder.appendElement(self, "first", (self) => {
         builder.appendTextNode(self, "text");
@@ -74,8 +74,8 @@ describe("simple document builder (builder style)", () => {
     shouldEquivalent(document, `<root><first>text</first>foo</root>`);
   });
   test("fragment", () => {
-    let [document, builder] = createBuilder({includeDeclaration: false});
-    let fragment = builder.createDocumentFragment();
+    const [document, builder] = createBuilder({includeDeclaration: false});
+    const fragment = builder.createDocumentFragment();
     builder.appendElement(fragment, "first", (self) => {
       builder.appendElement(self, "inner");
     });

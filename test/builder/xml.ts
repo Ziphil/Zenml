@@ -9,12 +9,12 @@ import {
 } from "../../source";
 
 
-let implementation = new DOMImplementation();
-let serializer = new XMLSerializer();
+const implementation = new DOMImplementation();
+const serializer = new XMLSerializer();
 
 export function createBuilder(): [Document, Builder] {
-  let document = implementation.createDocument(null, null, null);
-  let builder = new Builder(document);
+  const document = implementation.createDocument(null, null, null);
+  const builder = new Builder(document);
   return [document, builder];
 }
 
@@ -24,7 +24,7 @@ export function shouldEquivalent(input: Node, output: string): void {
 
 describe("xml builder", () => {
   test("simple 1", () => {
-    let [document, builder] = createBuilder();
+    const [document, builder] = createBuilder();
     builder.appendElement(document, "root", (self) => {
       builder.appendElement(self, "first");
       builder.appendElement(self, "second");
@@ -32,7 +32,7 @@ describe("xml builder", () => {
     shouldEquivalent(document, `<root><first/><second/></root>`);
   });
   test("simple 2", () => {
-    let [document, builder] = createBuilder();
+    const [document, builder] = createBuilder();
     builder.appendElement(document, "root", (self) => {
       builder.appendElement(self, "first", (self) => {
         builder.appendTextNode(self, "text");
@@ -42,8 +42,8 @@ describe("xml builder", () => {
     shouldEquivalent(document, `<root><first>text</first>foo</root>`);
   });
   test("fragment", () => {
-    let [document, builder] = createBuilder();
-    let fragment = builder.createDocumentFragment();
+    const [document, builder] = createBuilder();
+    const fragment = builder.createDocumentFragment();
     builder.appendElement(fragment, "first", (self) => {
       builder.appendElement(self, "inner");
     });
@@ -61,16 +61,16 @@ describe("xml builder", () => {
 
 describe("xml builder and callbacks", () => {
   test("element", () => {
-    let [document, builder] = createBuilder();
-    let element = builder.createElement("element", (element) => {
+    const [document, builder] = createBuilder();
+    const element = builder.createElement("element", (element) => {
       element.setAttribute("attr", "value");
     });
     builder.appendChild(document, element);
     shouldEquivalent(document, `<element attr="value"/>`);
   });
   test("text", () => {
-    let [document, builder] = createBuilder();
-    let element = builder.createTextNode("text", (text) => {
+    const [document, builder] = createBuilder();
+    const element = builder.createTextNode("text", (text) => {
       text.data += "added";
     });
     builder.appendChild(document, element);

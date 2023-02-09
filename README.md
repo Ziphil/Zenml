@@ -11,14 +11,19 @@
 ## Overview
 Zenithal Markup Language (ZenML) is an alternative syntax for XML.
 It is almost fully compatible with XML, and less redundant and more readable than XML.
+Take a look at [this file](test/parser/file/diary.zml) to see what a ZenML document looks like.
 
-This repository provides a script for parsing a ZenML document to an XML DOM, together with some utility classes which help transform XML documents.
+This repository provides a script to parse a ZenML document into an XML DOM, along with some utility classes to help transform XML documents.
 
 ## Installation
 Install via [npm](https://www.npmjs.com/package/@zenml/zenml).
 ```
 npm i @zenml/zenml
 ```
+
+## Documentation
+- [Syntax of ZenML](document/syntax.md)
+- [Basic usage](document/basic.md)
 
 ## ZenML/XML infrastructure
 There are several libraries related to ZenML/XML, which I call “ZenML/XML infrastructure”.

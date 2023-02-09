@@ -31,9 +31,9 @@ class TestZenmlPlugin implements ZenmlPlugin {
   }
 
   public getParser(): Parser<Nodes> {
-    let parser = Parsimmon.digits.map((string) => {
-      let element = this.document.createElement("digits");
-      let text = this.document.createTextNode(string);
+    const parser = Parsimmon.digits.map((string) => {
+      const element = this.document.createElement("digits");
+      const text = this.document.createTextNode(string);
       element.appendChild(text);
       return [element];
     });
@@ -41,12 +41,12 @@ class TestZenmlPlugin implements ZenmlPlugin {
   }
 
   public createElement(tagName: string, marks: ZenmlMarks, attributes: ZenmlAttributes, childrenArgs: ChildrenArgs): Nodes {
-    let element = this.document.createElement(tagName);
-    let children = childrenArgs[0] ?? [];
-    for (let [attributeName, attributeValue] of attributes) {
+    const element = this.document.createElement(tagName);
+    const children = childrenArgs[0] ?? [];
+    for (const [attributeName, attributeValue] of attributes) {
       element.setAttribute(attributeName, attributeValue);
     }
-    for (let child of children) {
+    for (const child of children) {
       element.appendChild(child);
     }
     return [element];
@@ -57,21 +57,22 @@ class TestZenmlPlugin implements ZenmlPlugin {
 
 describe("macros and plugins", () => {
   test("test plugin", () => {
-    let plugin = new TestZenmlPlugin();
+    const plugin = new TestZenmlPlugin();
     shouldEquivalent(`&macro<42>`, `<macro><digits>42</digits></macro>`, {}, (parser) => parser.registerPlugin("macro", plugin));
     shouldEquivalent(`&macro<100><200>`, `<macro><digits>100</digits></macro>`, {}, (parser) => parser.registerPlugin("macro", plugin));
+    shouldEquivalent(`\\root<&macro<100><200>>`, `<root><macro><digits>100</digits></macro></root>`, {}, (parser) => parser.registerPlugin("macro", plugin));
     shouldFail(`&macro<nondigits>`, {}, (parser) => parser.registerPlugin("macro", plugin));
   });
   test("simple plugin", () => {
     shouldEquivalent(`&tr<one\\elem<inner>><two\\elem;>`, `<tr><td>one<elem>inner</elem></td><td>two<elem/></td></tr>`, {}, (parser) => {
       parser.registerPlugin("tr", (builder, tagName, marks, attributes, childrenArgs) => {
-        let element = builder.createElement("tr");
-        for (let [attributeName, attributeValue] of attributes) {
+        const element = builder.createElement("tr");
+        for (const [attributeName, attributeValue] of attributes) {
           element.setAttribute(attributeName, attributeValue);
         }
-        for (let children of childrenArgs) {
-          let innerElement = builder.createElement("td");
-          for (let child of children) {
+        for (const children of childrenArgs) {
+          const innerElement = builder.createElement("td");
+          for (const child of children) {
             innerElement.appendChild(child);
           }
           element.appendChild(innerElement);
@@ -84,12 +85,13 @@ describe("macros and plugins", () => {
 
 describe("registration of plugins", () => {
   test("via plugin manager", () => {
-    let manager = new ZenmlPluginManager();
+    const manager = new ZenmlPluginManager();
     manager.registerPlugin("macro", new TestZenmlPlugin());
     manager.registerPlugin("func", (builder, tagName, marks, attributes, childrenArgs) => {
-      let element = builder.createElement(tagName);
+      const element = builder.createElement(tagName);
       return [element];
     });
-    shouldEquivalent(`&macro<42>&func<inner>`, `<macro><digits>42</digits></macro><func/>`, {}, (parser) => parser.registerPluginManager(manager));
+    shouldEquivalent(`&macro<42>`, `<macro><digits>42</digits></macro>`, {}, (parser) => parser.registerPluginManager(manager));
+    shouldEquivalent(`&func<inner>`, `<func/>`, {}, (parser) => parser.registerPluginManager(manager));
   });
 });

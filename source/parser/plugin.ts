@@ -17,17 +17,19 @@ import type {
 
 export interface ZenmlPlugin {
 
-  // Called once when this plugin is registered to the ZenML parser.
+  /** Called once when this plugin is registered to the ZenML parser. */
   initialize(zenmlParser: ZenmlParser): void;
 
-  // Called every time the document in the ZenML parser is updated.
-  // Make sure that all the nodes returned by this plugin belong to this document.
+  /** Called every time the ZenML parser starts parsing a ZenML document.
+   * When you implement a ZenML plugin, make sure that all the nodes returned by this plugin belong to the argument passed as an argument. */
   updateDocument(document: Document): void;
 
-  // Returns the parser that parses each argument of the macro.
-  // Called every time the ZenML parser visits a macro tag during the parsing process of a ZenML document.
+  /** Returns the parser that parses the arguments of each macro.
+   * Called every time the ZenML parser visits a macro element during the parsing process, and the returned parser is then used to parse the arguments */
   getParser(): Parser<Nodes>;
 
+  /** Returns the node array that is the result of the transformation of the whole macro.
+   * To `childrenArgs` is passed the result of parsing the arguments using the parser returned by the `getParser` method. */
   createElement(tagName: string, marks: ZenmlMarks, attributes: ZenmlAttributes, childrenArgs: ChildrenArgs): Nodes;
 
 }

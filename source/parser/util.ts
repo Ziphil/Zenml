@@ -11,8 +11,8 @@ export function maybe<T>(parser: Parser<T>): Parser<T | null> {
 }
 
 export function mapCatch<T, U>(callback: (result: T) => U): (parser: Parser<T>) => Parser<U> {
-  let convert = function (parser: Parser<T>): Parser<U> {
-    let nextParser = parser.chain((result) => {
+  const convert = function (parser: Parser<T>): Parser<U> {
+    const nextParser = parser.chain((result) => {
       try {
         return Parsimmon.succeed(callback(result));
       } catch (error) {
