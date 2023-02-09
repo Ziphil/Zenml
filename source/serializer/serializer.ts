@@ -2,6 +2,7 @@
 
 
 export type ZenmlSerializerOptions = {
+  includeDeclaration?: boolean
 };
 
 
@@ -75,7 +76,12 @@ export class ZenmlSerializer {
   }
 
   private serializeDocument(document: Document): string {
-    return Array.from(document.childNodes).map((child) => this.serialize(child)).join("");
+    let output = "";
+    if (this.options.includeDeclaration) {
+      output += "\\zml?|version=\"1.1\"|;\n";
+    }
+    output += Array.from(document.childNodes).map((child) => this.serialize(child)).join("");
+    return output;
   }
 
   private serializeDocumentFragment(fragment: DocumentFragment): string {
