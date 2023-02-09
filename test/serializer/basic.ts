@@ -22,8 +22,8 @@ export function shouldEquivalent(output: string, input: string, options?: ZenmlS
   expect(serializer.serialize(parser.parseFromString(input, "text/xml"))).toBe(output);
 }
 
-describe("elements and texts", () => {
-  test("basic", () => {
+describe("nodes", () => {
+  test("elements and texts", () => {
     shouldEquivalent(`texttext`, `texttext`);
     shouldEquivalent(`\\element<text>`, `<element>text</element>`);
   });
@@ -34,6 +34,13 @@ describe("elements and texts", () => {
   test("empty", () => {
     shouldEquivalent(`\\element;`, `<element/>`);
     shouldEquivalent(`\\element|attr="value"|;`, `<element attr="value"/>`);
+  });
+  test("comments", () => {
+    shouldEquivalent(`#<comment>`, `<!--comment-->`);
+    shouldEquivalent(`\\foo<#<comment>outer>`, `<foo><!--comment-->outer</foo>`);
+  });
+  test("CDATA sections", () => {
+    shouldEquivalent(`\\element<text \`&\`<\`>>`, `<element><![CDATA[text &<>]]></element>`);
   });
   test("processing instructions", () => {
     shouldEquivalent(`\\xml?<version="1.0" encoding="UTF-8">`, `<?xml version="1.0" encoding="UTF-8"?>`);
@@ -57,5 +64,25 @@ describe("elements and texts", () => {
         </foo>
       </root>
     `);
+  });
+});
+
+describe("escapes", () => {
+  test("in texts", () => {
+    shouldEquivalent("\\foo<`& `< `> `; \" `{ `} `[ `] `/ `\\ | `` `#>", "<foo>&amp; &lt; &gt; ; \" { } [ ] / \\ | ` #</foo>");
+  });
+  test("in strings", () => {
+    shouldEquivalent("\\foo|attr=\"& < > ; `\" { } [ ] / \\ | `` #\"|;", "<foo attr=\"&amp; &lt; &gt; ; &quot; { } [ ] / \\ | ` #\"/>");
+  });
+});
+
+describe("options", () => {
+  test("include declaration", () => {
+    shouldEquivalent($`
+      \\zml?|version="1.1"|;
+      \\element<text>
+    `, $`
+      <element>text</element>
+    `, {includeDeclaration: true});
   });
 });

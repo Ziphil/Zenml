@@ -259,8 +259,7 @@ describe("line comments", () => {
 
 describe("escapes", () => {
   test("in texts", () => {
-    shouldEquivalent("`& `< `> `; `\" `{ `} `[ `] `/ `\\ `| `` `#", "&amp; &lt; &gt; ; \" { } [ ] / \\ | ` #");
-    shouldEquivalent("\\foo<`>>", "<foo>&gt;</foo>");
+    shouldEquivalent("\\foo<`& `< `> `; `\" `{ `} `[ `] `/ `\\ `| `` `#>", "<foo>&amp; &lt; &gt; ; \" { } [ ] / \\ | ` #</foo>");
   });
   test("in strings", () => {
     shouldEquivalent("\\foo|attr=\"`& `< `> `; `\" `{ `} `[ `] `/ `\\ `| `` `#\"|;", "<foo attr=\"&amp; &lt; &gt; ; &quot; { } [ ] / \\ | ` #\"/>");
