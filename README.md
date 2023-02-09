@@ -37,3 +37,4 @@ The following list shows all the components of the infrastructure:
 | [utilities for XML transformation](https://github.com/Ziphil/Zenml) | [utilities for XML transformation](https://github.com/Ziphil/Zenithal) |
 | ~~utilities for book generation~~ | [utilities for book generation](https://github.com/Ziphil/ZenithalBook) |
 | [utilities for slide generation](https://github.com/Ziphil/ZenmlSlide) | [utilities for slide generation](https://github.com/Ziphil/ZenithalSlide) |
+| [VSCode extension](https://github.com/Ziphil/ZenmlVscodeExtension) | |
