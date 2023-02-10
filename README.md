@@ -8,9 +8,13 @@
 [![](https://img.shields.io/codecov/c/github/Ziphil/Zenml)](https://app.codecov.io/gh/Ziphil/Zenml)
 
 
+<div align="center">
+  <img src="document/logo.png" alt="ZenML logo">
+</div>
+
 ## Overview
 Zenithal Markup Language (ZenML) is an alternative syntax for XML.
-It is almost fully compatible with XML, and less redundant and more readable than XML.
+It is almost fully compatible with XML, and more readable and less redundant than XML.
 Take a look at [this file](test/parser/file/diary.zml) to see what a ZenML document looks like.
 
 This repository provides a script to parse a ZenML document into an XML DOM, along with some utility classes to help transform XML documents.
