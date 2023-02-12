@@ -21,11 +21,11 @@ import {
 } from "./template-manager";
 
 
-export type BaseTransformerOptions<D, C, V> = {
+export type BaseTransformerOptions<D, C = AnyObject, V = AnyObject> = {
   initialEnvironments?: Partial<C>,
   initialVariables?: Partial<V>
 };
-export type BaseTransformerTransformOptions<D, C, V> = {
+export type BaseTransformerTransformOptions<D, C = AnyObject, V = AnyObject> = {
   initialScope?: string,
   initialVariables?: Partial<V>
 };

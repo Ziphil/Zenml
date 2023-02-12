@@ -4,9 +4,12 @@ import {
   NodeLikeOf,
   SuperDocumentLike
 } from "../type/dom";
+import {
+  AnyObject
+} from "./transformer";
 
 
-export interface LightTransformer<D extends SuperDocumentLike<D>, C, V> {
+export interface LightTransformer<D extends SuperDocumentLike<D>, C = AnyObject, V = AnyObject> {
 
   environments: C;
   variables: V;
